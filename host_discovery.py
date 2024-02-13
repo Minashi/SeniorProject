@@ -17,7 +17,7 @@ pars.add_argument("-aH", "--activehosts", required=True, help="Use CIDR notation
 args = pars.parse_args()
 activehosts = args.activehosts
 
-# user must execute: python active_host_discovery.py -aH <192.168.1.0/24>, change ip for the network you want.
+# user must execute: "sudo python active_host_discovery.py -aH <192.168.1.0/24>", change ip for the network you want.
 perform_network_scan(activehosts)
 
 
