@@ -21,6 +21,9 @@ def deauth(ap_mac, c_mac):
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while executing aireplay-ng: {e}")
 
+def crack_handshake():
+    pass
+
 def display_access_points():
     file_path = "/mnt/data/access_points.txt"
     # Initialize the PrettyTable with the specified headers
