@@ -13,7 +13,7 @@ def kerberoasting():
 def asrep_roasting():
     pass
 
-def list_credentials():
+def list_hashes():
     # list username, password (if found), and hash
     pass
 
