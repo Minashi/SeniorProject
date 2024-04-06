@@ -1,3 +1,4 @@
+import wpa2
 from prettytable import PrettyTable
 import subprocess
 import time
@@ -182,6 +183,9 @@ def menu_option_3():
         except Exception as e:
             print("Error occurred:", e)
 
+def menu_option_4():
+    print("test")
+    
 # PIVOT MENU OPTIONS
 def submenu_option_1():
     passwords_file = "/mnt/data/passwords.txt"
@@ -261,9 +265,9 @@ def submenu_option_3():
     enumerate_lan()
 
 # NAVIGATION
-def menu_to_submenu():
-    print("Entering Main menu...")
-    display_submenu()
+def menu_to_pivot():
+    print("Pivot Menu")
+    display_pivot()
 
 def exit_menu():
     print("Exiting menu...")
@@ -274,7 +278,8 @@ def display_menu():
         {"label": "Access Point Enumeration", "function": menu_option_1},
         {"label": "List Discovered Access Points", "function": menu_option_2},
         {"label": "Crack WEP", "function": menu_option_3},
-        {"label": "Pivot", "function": menu_to_submenu},
+        {"label": "Attacking WPA/2", "function": menu_option_4},
+        {"label": "Pivot", "function": menu_to_pivot},
         {"label": "Analyze Vulnerabilities", "function": analyze_vulnerabilities},
         {"label": "Exit", "function": exit_menu},
     ]
@@ -298,7 +303,7 @@ def display_menu():
             print("\nExiting due to Ctrl+C")
             break
 
-def display_submenu():
+def display_pivot():
     submenu_options = [
         {"label": "List Cracked Passwords", "function": submenu_option_1},
         {"label": "Pivot To Access Point", "function": submenu_option_2},
@@ -347,7 +352,7 @@ def enumerate_lan():
         {"label": "Basic LAN Scan", "function": basic_lan_scan},
         {"label": "Scan for Common Vulnerabilities", "function": scan_for_vulnerabilities},
         {"label": "Custom Nmap Script Scan", "function": custom_nmap_script_scan},
-        {"label": "Return to Previous Menu", "function": display_submenu},
+        {"label": "Return to Previous Menu", "function": display_pivot},
     ]
 
     while True:
