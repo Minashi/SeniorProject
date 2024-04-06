@@ -1,4 +1,5 @@
 import wpa2
+import activedirectory
 from prettytable import PrettyTable
 import subprocess
 import time
@@ -365,6 +366,7 @@ def display_pivot():
         {"label": "List Cracked Passwords", "function": submenu_option_1},
         {"label": "Pivot To Access Point", "function": submenu_option_2},
         {"label": "Enumerate LAN", "function": submenu_option_3},
+        {"label": "Active Directory", "function": display_activedirectory},
         {"label": "Exit Pivot Menu", "function": exit_menu},
     ]
 
@@ -381,6 +383,27 @@ def display_pivot():
         else:
             print("Invalid option, please try again.")
 
+def display_activedirectory():
+    submenu_options = [
+        {"label": "Validate Domain Existence", "function": activedirectory.is_active_directory},
+        {"label": "Basic AD Enumeration", "function": activedirectory.basic_ad_enum},
+        {"label": "LLMNR Poisoning: Capture Service Hashes", "function": activedirectory.llmnr_poisoning},
+        {"label": "List Captured Hashes", "function": activedirectory.list_hashes},
+        {"label": "Return to Pivot Menu", "function": exit_menu},
+    ]
+
+    while True:
+        print("\nActive Directory:")
+        for i, option in enumerate(submenu_options, start=1):
+            print(f"{i}. {option['label']}")
+
+        choice = int(input("Select an option: "))
+        if 1 <= choice <= len(submenu_options):
+            submenu_options[choice - 1]["function"]()
+            if submenu_options[choice - 1]["label"] == "Return to Pivot Menu":
+                break
+        else:
+            print("Invalid option, please try again.")
 
 def analyze_vulnerabilities():
     file_path = "/mnt/data/access_points.txt"
