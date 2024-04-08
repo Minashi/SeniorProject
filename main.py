@@ -53,6 +53,7 @@ def display_menu():
         {"label": "Attacking WPA/2", "function": attacking_wpa2},
         {"label": "Pivot", "function": display_pivot},
         {"label": "Analyze Vulnerabilities", "function": wep.identify_wep},
+        {"label": "Checksum Verification", "function": checksum.main},
         {"label": "Exit", "function": exit_menu},
     ]
 
