@@ -5,10 +5,23 @@ from scripts import wep, wps, wpa2, evil_twin, ap_enum, pivot
 from scripts import activedirectory, checksum
 from scripts import host_discovery, network_scan, enumerate_lan
 
+host_mac = " "
+
 def check_root_user():
     if os.geteuid() != 0:
         print("This script must be run as root. Exiting.")
         sys.exit(1)
+
+def get_current_mac():
+    try:
+        global host_mac
+        output = subprocess.check_output(["macchanger", "-s", "wlan0"]).decode("utf-8")
+        # Extract the current MAC address using regular expression
+        host_mac = re.search(r"Current MAC:\s+([\w:]+)", output).group(1)
+        return True
+    except subprocess.CalledProcessError as e:
+        print("Error:", e.output.decode("utf-8"))
+        return None   
 
 def loading_prompt(message="", art=None):
     if art:
@@ -36,7 +49,7 @@ def display_menu():
     menu_options = [
         {"label": "Access Point Enumeration", "function": ap_enum.main},
         {"label": "List Discovered Access Points", "function": ap_enum.discovered_ap},
-        {"label": "Crack WEP", "function": wep.main},
+        {"label": "Attacking WEP", "function": attacking_wep},
         {"label": "Attacking WPA/2", "function": attacking_wpa2},
         {"label": "Pivot", "function": display_pivot},
         {"label": "Analyze Vulnerabilities", "function": wep.analyze_vulnerabilities},
@@ -44,7 +57,7 @@ def display_menu():
     ]
 
     while True:
-        print("\nMenu:")
+        print("\nMain Menu:")
         for i, option in enumerate(menu_options, start=1):
             print(f"{i}. {option['label']}")
 
@@ -62,9 +75,53 @@ def display_menu():
             print("\nExiting due to Ctrl+C")
             break
 
+def attacking_wep():
+    target_ap = "Not Set"
+    target_c = "Not Set"
+    ap_mac = " "
+    
+    def target_accesspoint():
+        nonlocal target_ap
+        nonlocal ap_mac
+        target_ap, ap_mac = wep.target_ap()
+        print("\nNew Target Access Point: ", target_ap)
+
+    def target_client():
+        nonlocal target_c
+        target_c = wep.target_c()
+        print("\nNew Target Client: ", target_c)
+
+    def crack_wep():
+        wep.main(target_ap, ap_mac, host_mac, target_c)
+    
+    submenu_options = [
+        {"label": "Identify WEP Targets", "function": wep.identify_wep},
+        {"label": "Identify Potential Clients", "function": pivot.submenu_option_2},
+        {"label": "Set Target Access Point", "function": target_accesspoint},
+        {"label": "Set Target Client", "function": target_client},
+        {"label": "Crack WEP Key", "function": crack_wep},
+        {"label": "Return To Main Menu", "function": exit_menu},
+    ]
+
+    while True:
+        print("\nAttacking WEP:")
+        print("Target Access Point:", target_ap)
+        print("Target Client:", target_c, "\n")
+        
+        for i, option in enumerate(submenu_options, start=1):
+            print(f"{i}. {option['label']}")
+
+        choice = int(input("Select an option: "))
+        if 1 <= choice <= len(submenu_options):
+            submenu_options[choice - 1]["function"]()
+            if submenu_options[choice - 1]["label"] == "Return To Main Menu":
+                break
+        else:
+            print("Invalid option, please try again.")
+
 def attacking_wpa2():
-    target_ap = " "
-    target_c = " "
+    target_ap = "Not Set"
+    target_c = "Not Set"
 
     def target_accesspoint():
         nonlocal target_ap
@@ -172,6 +229,14 @@ def enumerate_lan():
 
 # Check if the user is root before proceeding
 check_root_user()
+print("\nMAKE SURE YOU ENTER MONITORING MODE BEFORE RUNNING SCRIPT\n")
+
+# Capture host mac
+current_mac = get_current_mac()
+if current_mac:
+    print("Current MAC address:", host_mac, "\n")
+else:
+    print("Failed to get current MAC address.\n") 
 
 # Initiate loading menu
 loading_prompt("Initializing menu", ascii_art)
