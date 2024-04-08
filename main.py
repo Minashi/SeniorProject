@@ -88,6 +88,7 @@ def attacking_wep():
 
     def target_client():
         nonlocal target_c
+        print("Verify there is a client connected! Before attempting!")
         target_c = wep.target_c()
         print("\nNew Target Client: ", target_c)
 
