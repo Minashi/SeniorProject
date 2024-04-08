@@ -3,6 +3,28 @@ import time
 import sys
 import shutil
 
+def identify_wep():
+    file_path = "/mnt/data/access_points.txt"
+    try:
+        with open(file_path, mode='r') as file:
+            csv_reader = csv.reader(file)
+            vulnerable_aps = []
+            for row in csv_reader:
+                if "WEP" in row[1]:  # Assuming the encryption standard is in the second column
+                    vulnerable_aps.append(row)
+            if vulnerable_aps:
+                print("Vulnerable Access Points Found:")
+                for ap in vulnerable_aps:
+                    print(f"SSID: {ap[2]}, BSSID: {ap[0]}, Encryption: {ap[1]}")
+                    print("Vulnerability: Uses WEP encryption, which is outdated and easily cracked.")
+                    print("Remediation: Upgrade to WPA3 or at least WPA2 encryption.\n")
+            else:
+                print("No vulnerable access points found using WEP encryption.")
+    except FileNotFoundError:
+        print(f"The file {file_path} was not found.")
+    except Exception as e:
+        print(f"An error occurred while analyzing vulnerabilities: {e}")
+
 def run_command_background(cmd):
     """Run command in the background"""
     return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -93,6 +115,3 @@ def main():
         if arp_replay_proc:
             arp_replay_proc.terminate()
         sys.exit(0)
-
-if __name__ == "__main__":
-    main()
