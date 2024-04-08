@@ -246,7 +246,6 @@ def enumerate_lan():
 
 # Check if the user is root before proceeding
 check_root_user()
-print("\nMAKE SURE YOU ENTER MONITORING MODE BEFORE RUNNING SCRIPT\n")
 
 # Enable Monitoring Mode
 monitoring_mode()
