@@ -121,9 +121,9 @@ def delete_accesspoints():
     
     if os.path.exists(file_path):
         os.remove(file_path)
-        return "File deleted successfully."
+        print("Access Points Cleared Successfully.")
     else:
-        return "File does not exist."
+        print("/mnt/data/access_points.txt does not exist.")
 
 def main():
     interface = 'wlan0'
