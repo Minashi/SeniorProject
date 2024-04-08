@@ -26,10 +26,12 @@ def identify_wep():
         print(f"An error occurred while analyzing vulnerabilities: {e}")
 
 def target_ap():
-    pass
+    
+    return essid, ap_mac
 
 def target_c():
-    pass
+    
+    return client_mac
 
 def run_command_background(cmd):
     """Run command in the background"""
@@ -58,12 +60,10 @@ def extract_key(output):
         return key
     return "No key found"
 
-def main():
-    essid = "T52GT"
-    ap_mac = "18:1B:EB:FC:B0:74"
-    your_mac = "00:40:f0:79:3d:6c"
-    client_mac = "10:F6:0A:7A:8C:94"
+def main(essid, ap_mac, your_mac, client_mac):
+    print("Verify there is a client connected! Before attempting!")
     interface = "wlan0mon"
+    #hard coded channel for project dont have time to set dynamically
     channel = "6"
 
     airodump_proc = None
