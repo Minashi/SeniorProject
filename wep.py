@@ -48,6 +48,8 @@ def main():
         run_command(deauth_cmd)
         print("Sending Initial Deauthentication Packets...")
 
+	time.sleep(5)
+	
         # Attempt to crack WEP until successful
         success = False
         while not success:
