@@ -45,11 +45,12 @@ def check_file_integrity(file_path):
             store_checksum(file_path, current_checksum)
         return False
 
-# User input for the file path
-file_path = input("Enter the file path to check: ")
-
-# Check if the file has changed since the last checksum calculation
-if check_file_integrity(file_path):
-    print("File integrity preserved.")
-else:
-    print("File has changed!")
+def main():
+    # User input for the file path
+    file_path = input("Enter the file path to check: ")
+    
+    # Check if the file has changed since the last checksum calculation
+    if check_file_integrity(file_path):
+        print("File integrity preserved.")
+    else:
+        print("File has changed!")
