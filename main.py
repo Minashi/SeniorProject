@@ -15,7 +15,7 @@ def check_root_user():
 def get_current_mac():
     try:
         global host_mac
-        output = subprocess.check_output(["macchanger", "-s", "wlan0"]).decode("utf-8")
+        output = subprocess.check_output(["macchanger", "-s", "wlan0mon"]).decode("utf-8")
         # Extract the current MAC address using regular expression
         host_mac = re.search(r"Current MAC:\s+([\w:]+)", output).group(1)
         return True
@@ -52,7 +52,7 @@ def display_menu():
         {"label": "Attacking WEP", "function": attacking_wep},
         {"label": "Attacking WPA/2", "function": attacking_wpa2},
         {"label": "Pivot", "function": display_pivot},
-        {"label": "Analyze Vulnerabilities", "function": wep.analyze_vulnerabilities},
+        {"label": "Analyze Vulnerabilities", "function": wep.identify_wep},
         {"label": "Exit", "function": exit_menu},
     ]
 
