@@ -23,10 +23,10 @@ def enable_monitor_mode(interface):
         result = subprocess.run(['airmon-ng', 'start', interface], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 text=True)
         if is_monitor_mode_enabled(interface + 'mon'):
-            print(f"Monitoring mode enabled on {interface}mon")
+            print(f"Monitoring mode enabled on {interface}mon\n")
             return True
         else:
-            print("Failed to enable monitoring mode.")
+            print("Failed to enable monitoring mode.\n")
             return False
     except Exception as e:
         print(f"An error occurred while enabling monitoring mode: {e}")
