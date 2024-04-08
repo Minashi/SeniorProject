@@ -1,1 +1,2 @@
-.gitkeep
+def main():
+  pass
