@@ -225,4 +225,3 @@ def main(essid, ap_mac, your_mac, client_mac):
             airodump_proc.terminate()
         if arp_replay_proc:
             arp_replay_proc.terminate()
-        sys.exit(0)
