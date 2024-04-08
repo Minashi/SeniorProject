@@ -61,7 +61,6 @@ def extract_key(output):
     return "No key found"
 
 def main(essid, ap_mac, your_mac, client_mac):
-    print("Verify there is a client connected! Before attempting!")
     interface = "wlan0mon"
     #hard coded channel for project dont have time to set dynamically
     channel = "6"
