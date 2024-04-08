@@ -97,7 +97,6 @@ def attacking_wep():
     
     submenu_options = [
         {"label": "Identify WEP Targets", "function": wep.identify_wep},
-        {"label": "Identify Potential Clients", "function": pivot.submenu_option_2},
         {"label": "Set Target Access Point", "function": target_accesspoint},
         {"label": "Set Target Client", "function": target_client},
         {"label": "Crack WEP Key", "function": crack_wep},
