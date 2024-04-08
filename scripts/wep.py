@@ -65,7 +65,7 @@ def ensure_data_directory_exists():
 
 def run_airodump(bssid):
     try:
-        channel = "6"  # Example channel; this could be dynamic based on your needs
+        channel = "6"  # Assuming channel 6; adjust as necessary
         file_prefix = ensure_data_directory_exists() + "/airodump"
         command = [
             'airodump-ng',
@@ -76,14 +76,19 @@ def run_airodump(bssid):
             '--output-format', 'csv'
         ]
         print("Running airodump-ng... Press Ctrl+C to stop.")
-        airodump_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # Running the process without redirecting stdout and stderr so output will be shown in the console
+        airodump_process = subprocess.Popen(command)
+        
         try:
+            # Wait for the process to complete, or for a KeyboardInterrupt (Ctrl+C) to stop it
             airodump_process.wait()
         except KeyboardInterrupt:
+            # Terminate the process if the user interrupts with Ctrl+C
             airodump_process.terminate()
             print("\nAirodump-ng stopped by user.")
-        airodump_process.communicate()
-
+        
+        # After stopping, proceed to process the generated CSV files as before
         directory = ensure_data_directory_exists()
         csv_file = None
         for file in os.listdir(directory):
@@ -98,13 +103,12 @@ def run_airodump(bssid):
         clients = []
         with open(csv_file, mode='r') as file:
             content = file.read()
-            # Assuming client information is in the second section of the CSV after access points
             client_section = content.split('Station MAC,')[1] if 'Station MAC,' in content else ''
             csv_reader = csv.reader(client_section.splitlines())
             next(csv_reader)  # Skip the header row
             for row in csv_reader:
-                if len(row) > 0 and row[0].strip() != '':  # Check for non-empty rows
-                    clients.append(row[0].strip())  # Assuming the first column is the Station MAC
+                if len(row) > 0 and row[0].strip() != '':
+                    clients.append(row[0].strip())
 
         if not clients:
             print("No clients found.")
@@ -116,12 +120,12 @@ def run_airodump(bssid):
                 clients_file.write(client + '\n')
 
         print("Clients found and saved to:", clients_filename)
-        
-        # Presenting the user with the client selection
+
+        # Client selection
         print("Select a client by its index number:")
         for index, client in enumerate(clients):
             print(f"{index}: {client}")
-        
+
         selected_index = int(input("Enter the index number of the target client: "))
         if 0 <= selected_index < len(clients):
             selected_client = clients[selected_index]
