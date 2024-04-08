@@ -116,6 +116,15 @@ def discovered_ap():
     except Exception as e:
         print(f"An error occurred while reading the file: {e}")
 
+def delete_accesspoints():
+    file_path = "/mnt/data/access_points.txt"
+    
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        return "File deleted successfully."
+    else:
+        return "File does not exist."
+
 def main():
     interface = 'wlan0'
     mon_interface = 'wlan0mon'
