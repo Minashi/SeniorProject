@@ -11,14 +11,11 @@ def perform_network_scan(network):
     result = subprocess.run(nmap_command, shell=True, capture_output=True, text=True)
     print(result.stdout)
 
-
-pars = argparse.ArgumentParser(description="Active Host Discovery")
-pars.add_argument("-aH", "--activehosts", required=True, help="Use CIDR notation: 192.168.1.0/24)")
-args = pars.parse_args()
-activehosts = args.activehosts
-
-# user must execute: "sudo python active_host_discovery.py -aH <192.168.1.0/24>", change ip for the network you want.
-perform_network_scan(activehosts)
-
-
-
+def main():
+    pars = argparse.ArgumentParser(description="Active Host Discovery")
+    pars.add_argument("-aH", "--activehosts", required=True, help="Use CIDR notation: 192.168.1.0/24)")
+    args = pars.parse_args()
+    activehosts = args.activehosts
+    
+    # user must execute: "sudo python active_host_discovery.py -aH <192.168.1.0/24>", change ip for the network you want.
+    perform_network_scan(activehosts)
