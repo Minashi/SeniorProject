@@ -49,6 +49,7 @@ def display_menu():
     menu_options = [
         {"label": "Access Point Enumeration", "function": ap_enum.main},
         {"label": "List Discovered Access Points", "function": ap_enum.discovered_ap},
+        {"label": "Clear Discovered Access Points", "function": ap_enum.delete_accesspoints},
         {"label": "Attacking WEP", "function": attacking_wep},
         {"label": "Attacking WPA/2", "function": attacking_wpa2},
         {"label": "Pivot", "function": display_pivot},
