@@ -12,6 +12,21 @@ def check_root_user():
         print("This script must be run as root. Exiting.")
         sys.exit(1)
 
+def monitoring_mode():
+    interface = 'wlan0'
+    mon_interface = 'wlan0mon'
+
+    # Check if wlan0mon is already in monitoring mode
+    if ap_enum.is_monitor_mode_enabled(mon_interface):
+        print(f"Monitoring mode is already enabled on: {mon_interface}\n")
+    else:
+        print("No network adapter is in monitoring mode.")
+        user_input = input("Would you like to enable monitoring mode on wlan0? (yes/no): ")
+        if user_input.lower() == 'yes':
+            ap_enum.enable_monitor_mode(interface)
+        else:
+            print("Exiting without enabling monitoring mode or scanning.")
+
 def get_current_mac():
     try:
         global host_mac
@@ -232,6 +247,9 @@ def enumerate_lan():
 # Check if the user is root before proceeding
 check_root_user()
 print("\nMAKE SURE YOU ENTER MONITORING MODE BEFORE RUNNING SCRIPT\n")
+
+# Enable Monitoring Mode
+monitoring_mode()
 
 # Capture host mac
 current_mac = get_current_mac()
