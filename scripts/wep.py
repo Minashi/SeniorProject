@@ -25,6 +25,12 @@ def identify_wep():
     except Exception as e:
         print(f"An error occurred while analyzing vulnerabilities: {e}")
 
+def target_ap():
+    pass
+
+def target_c():
+    pass
+
 def run_command_background(cmd):
     """Run command in the background"""
     return subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
