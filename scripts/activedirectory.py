@@ -55,9 +55,13 @@ def list_hashes():
     process_ntlm_hashes()
 
     hashes_file_path = '/mnt/data/ntlmv2-hashes.txt'
-    with open(hashes_file_path, 'r') as file:
-        for line in file:
-            print(line.strip())
+    # Check if the file exists before trying to open it
+    if os.path.exists(hashes_file_path):
+        with open(hashes_file_path, 'r') as file:
+            for line in file:
+                print(line.strip())
+    else:
+        print("Hashes file does not exist.")
 
 def basic_ad_enum():
     # nbtscan, enum4linux
