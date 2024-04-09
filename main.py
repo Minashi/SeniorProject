@@ -153,6 +153,7 @@ def attacking_wpa2():
         print("\nNew Target Client: ", target_c)
 
     submenu_options = [
+        {"label": "Identify WPA2 Targets", "function": wpa2.identify_wpa2},
         {"label": "Set Target Access Point", "function": target_accesspoint},
         {"label": "Identify Potential Clients", "function": wpa2.identify_clients},
         {"label": "Set Target Client", "function": target_client},
