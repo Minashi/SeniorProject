@@ -19,6 +19,7 @@ def dump(ap_mac, channel):
 
 def crack():
     cap_file = "/mnt/data/wpa2_handshake-01.cap"
+    cap_file_pattern = "/mnt/data/wpa2_handshake*"
     
     if not os.path.exists(cap_file):
         print("The .cap file does not exist. Please ensure the file path is correct.")
@@ -34,10 +35,12 @@ def crack():
     except Exception as e:
         print(f"Failed to start crack: {e}")
     finally:
-        if os.path.exists(cap_file):
-            print("Deleting .cap file...")
-            os.remove(cap_file)
-            print(".cap file deleted successfully.")
+        files_to_delete = glob.glob(cap_file_pattern)
+        if files_to_delete:
+            print("Deleting .cap files...")
+            for file in files_to_delete:
+                os.remove(file)
+            print(".cap files deleted successfully.")
 
 def move_cap_file():
     try:
