@@ -53,8 +53,8 @@ def dump(ap_mac, channel):
         print("Capture file saved.")
 
 def crack():
-    cap_file = "/mnt/data/wpa2_handshake-01.cap"
-    cap_file_pattern = "/mnt/data/wpa2_handshake*"
+    cap_file = "/mnt/data/wpa2_handshake/airodump-01.cap"
+    cap_file_pattern = "/mnt/data/wpa2_handshake/airodump-0*"
     
     if not os.path.exists(cap_file):
         print("The .cap file does not exist. Please ensure the file path is correct.")
@@ -76,13 +76,6 @@ def crack():
             for file in files_to_delete:
                 os.remove(file)
             print(".cap files deleted successfully.")
-
-def move_cap_file():
-    try:
-        shutil.move("./wpa_attack-01.cap", "/mnt/data/wpa_attack-01.cap")
-        print(".cap file moved to /mnt/data/")
-    except Exception as e:
-        print("Failed to move .cap file:", e)
         
 def identify_wpa2():
     file_path = "/mnt/data/access_points.txt"
@@ -227,13 +220,21 @@ def target_ap():
 def target_c(bssid):
     client_mac = run_airodump(bssid)
     return client_mac
-    
+
+def signal_handler(sig, frame):
+    sys.exit(0)
+
 def main(essid, ap_mac, your_mac, c_mac):
     channel = "6"
     interface = "wlan0mon"
 
+    # Set up signal handling to catch Ctrl+C and perform cleanup
+    signal.signal(signal.SIGINT, signal_handler)
+
     try:
         deauth(ap_mac, c_mac, interface)
         dump(ap_mac, channel)
+    except KeyboardInterrupt:
+        print('Ctrl+C Was Pressed...')
     except Exception as e:
         print(f"An error occurred: {e}")
