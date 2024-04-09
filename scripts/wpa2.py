@@ -21,16 +21,17 @@ def crack():
     cap_file = "/mnt/data/wpa2_handshake-01.cap"
     try:
         print("Attempting to crack WPA password...")
-        # Running the aircrack-ng command
         subprocess.run(["sudo", "aircrack-ng", cap_file, "-w", "/usr/share/wordlists/rockyou.txt"])
+        print("Cracking attempt completed.")
         
-        # If the command completes successfully, delete the .cap file
-        print("Cracking attempt completed. Deleting .cap file...")
-        os.remove(cap_file)
-        print(".cap file deleted successfully.")
-        
+    except KeyboardInterrupt:
+        print("\nCracking attempt interrupted by the user.")
     except Exception as e:
         print(f"Failed to start crack: {e}")
+    finally:
+        print("Deleting .cap file...")
+        os.remove(cap_file)
+        print(".cap file deleted successfully.")
 
 def move_cap_file():
     try:
