@@ -187,22 +187,28 @@ def attacking_wep():
 def attacking_wpa2():
     target_ap = "Not Set"
     target_c = "Not Set"
+    ap_mac = " "
 
     def target_accesspoint():
         nonlocal target_ap
-        target_ap = wpa2.target_ap()
+        nonlocal ap_mac
+        target_ap, ap_mac = wpa2.target_ap()
         print("\nNew Target Access Point: ", target_ap)
 
     def target_client():
         nonlocal target_c
-        target_c = wpa2.target_c()
+        print("Verify there is a client connected! Before attempting!\n")
+        target_c = wpa2.target_c(ap_mac)
         print("\nNew Target Client: ", target_c)
+
+    def crack_wpa2():
+        wpa2.main(target_ap, ap_mac, host_mac, target_c)
 
     submenu_options = [
         {"label": "Identify WPA2 Targets", "function": wpa2.identify_wpa2},
         {"label": "Set Target Access Point", "function": target_accesspoint},
         {"label": "Set Target Client", "function": target_client},
-        {"label": "Crack WPA2 Handshake", "function": wpa2.main},
+        {"label": "Crack WPA2 Handshake", "function": crack_wpa2},
         {"label": "Return To Main Menu", "function": exit_menu},
     ]
 
