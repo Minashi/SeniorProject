@@ -1,4 +1,4 @@
-import subprocess, signal, sys, time, shutil, csv
+import subprocess, signal, sys, time, os, shutil, csv
 
 deauth_process = None  # Global variable to keep track of the deauth subprocess
 
@@ -74,7 +74,7 @@ def ensure_data_directory_exists():
 
 def run_airodump(bssid):
     try:
-        channel = "6"  # Assuming channel 6; adjust as necessary
+        channel = "6"  # Assuming channel 6; adjust as necessary.
         file_prefix = ensure_data_directory_exists() + "/airodump"
         command = [
             'airodump-ng',
@@ -86,18 +86,18 @@ def run_airodump(bssid):
         ]
         print("Running airodump-ng... Press Ctrl+C to stop.")
         
-        # Running the process without redirecting stdout and stderr so output will be shown in the console
+        # Running the process without redirecting stdout and stderr so output will be shown in the console.
         airodump_process = subprocess.Popen(command)
         
         try:
-            # Wait for the process to complete, or for a KeyboardInterrupt (Ctrl+C) to stop it
+            # Wait for the process to complete, or for a KeyboardInterrupt (Ctrl+C) to stop it.
             airodump_process.wait()
         except KeyboardInterrupt:
-            # Terminate the process if the user interrupts with Ctrl+C
+            # Terminate the process if the user interrupts with Ctrl+C.
             airodump_process.terminate()
             print("\nAirodump-ng stopped by user.")
         
-        # After stopping, proceed to process the generated CSV files as before
+        # After stopping, proceed to process the generated CSV files.
         directory = ensure_data_directory_exists()
         csv_file = None
         for file in os.listdir(directory):
@@ -114,7 +114,7 @@ def run_airodump(bssid):
             content = file.read()
             client_section = content.split('Station MAC,')[1] if 'Station MAC,' in content else ''
             csv_reader = csv.reader(client_section.splitlines())
-            next(csv_reader)  # Skip the header row
+            next(csv_reader)  # Skip the header row.
             for row in csv_reader:
                 if len(row) > 0 and row[0].strip() != '':
                     clients.append(row[0].strip())
@@ -130,7 +130,7 @@ def run_airodump(bssid):
 
         print("Clients found and saved to:", clients_filename)
 
-        # Client selection
+        # Client selection.
         print("Select a client by its index number:")
         for index, client in enumerate(clients):
             print(f"{index}: {client}")
@@ -147,6 +147,15 @@ def run_airodump(bssid):
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+    
+    finally:
+        # Delete all airodump files.
+        try:
+            for file in glob.glob(ensure_data_directory_exists() + "/airodump*"):
+                os.remove(file)
+            print("All airodump-ng files deleted.")
+        except Exception as e:
+            print(f"Error deleting airodump-ng files: {e}")
 
 def target_ap():
     file_path = "/mnt/data/access_points.txt"
