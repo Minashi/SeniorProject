@@ -66,6 +66,9 @@ def identify_wpa2():
     except Exception as e:
         print(f"An error occurred while analyzing vulnerabilities: {e}")
 
+def identify_clients():
+    pass
+
 def main():
     ap_mac = "18:1B:EB:FC:B0:74"
     channel = "6"  # Channel should be a string as it's passed directly to subprocess commands
