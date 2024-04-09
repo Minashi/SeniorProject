@@ -1,5 +1,4 @@
-import re
-import subprocess
+import re, os, subprocess
 
 def is_active_directory():
     pass
