@@ -19,6 +19,11 @@ def dump(ap_mac, channel):
 
 def crack():
     cap_file = "/mnt/data/wpa2_handshake-01.cap"
+    
+    if not os.path.exists(cap_file):
+        print("The .cap file does not exist. Please ensure the file path is correct.")
+        return
+    
     try:
         print("Attempting to crack WPA password...")
         subprocess.run(["sudo", "aircrack-ng", cap_file, "-w", "/usr/share/wordlists/rockyou.txt"])
@@ -29,9 +34,10 @@ def crack():
     except Exception as e:
         print(f"Failed to start crack: {e}")
     finally:
-        print("Deleting .cap file...")
-        os.remove(cap_file)
-        print(".cap file deleted successfully.")
+        if os.path.exists(cap_file):
+            print("Deleting .cap file...")
+            os.remove(cap_file)
+            print(".cap file deleted successfully.")
 
 def move_cap_file():
     try:
