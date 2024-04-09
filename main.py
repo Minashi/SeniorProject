@@ -1,4 +1,4 @@
-import subprocess, time, sys, csv, os, re
+import subprocess, time, sys, csv, os, re, atexit
 from prettytable import PrettyTable
 
 from scripts import wep, wps, wpa2, evil_twin, ap_enum, pivot
@@ -7,6 +7,52 @@ from scripts import host_discovery, network_scan, enumerate_lan
 from scripts.password_utilities import generate_password_interface, test_password_strength_interface
 
 host_mac = " "
+
+class DualLogger:
+    def __init__(self, file_path, terminal):
+        self.terminal = terminal
+        self.log = open(file_path, "a")
+
+    def write(self, message):
+        try:
+            self.terminal.write(message)
+            self.log.write(message)
+        except Exception as e:
+            pass  # Consider logging this to a file or handling appropriately
+
+    def flush(self):
+        try:
+            self.terminal.flush()
+            self.log.flush()
+        except Exception as e:
+            pass
+
+    def close(self):
+        try:
+            if self.log and not self.log.closed:
+                self.log.close()
+        except Exception as e:
+            pass  # Consider how you want to handle a failure to close
+    def direct_print(self, message):
+        """
+        Prints a message directly to the terminal, bypassing the log.
+        """
+        self.terminal.write(message + "\n")
+        self.terminal.flush()
+
+def cleanup():
+    # Delegate to the DualLogger's close method
+    sys.stdout.direct_print(f"All output has been logged to: {log_path}")
+    sys.stdout.close()
+    sys.stderr.close()  # If sys.stderr is also a DualLogger
+
+# Set up the dual logging system
+log_path = "/mnt/data/log.txt"
+sys.stdout = DualLogger(log_path, sys.stdout)
+sys.stderr = DualLogger(log_path, sys.stderr)
+
+# Register the cleanup function to be called at exit
+atexit.register(cleanup)
 
 def check_root_user():
     if os.geteuid() != 0:
