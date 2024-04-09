@@ -202,7 +202,7 @@ def attacking_wpa2():
         print("\nNew Target Client: ", target_c)
 
     def capture_wpa2():
-        wpa2.main(target_ap, ap_mac, host_mac, target_c)
+        wpa2.main(target_ap, ap_mac, target_c)
 
     submenu_options = [
         {"label": "Identify WPA2 Targets", "function": wpa2.identify_wpa2},
