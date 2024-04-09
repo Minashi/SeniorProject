@@ -22,6 +22,12 @@ def process_ntlm_hashes():
     output_file_path = "/mnt/data/ntlmv2-hashes.txt"
 
     bash_command = f"""
+    # Check if the log file exists, if not, exit the script or handle accordingly
+    if [ ! -f "{log_file_path}" ]; then
+        echo "Log file does not exist, exiting..."
+        exit 1
+    fi
+
     while IFS= read -r line; do
         # Use awk to extract the full hash, which includes the username
         full_hash=$(echo "$line" | awk -F': ' '{{print $2}}')
