@@ -1,4 +1,4 @@
-import subprocess, signal, sys, time, os, shutil, csv, glob, time
+import subprocess, signal, sys, time, os, shutil, csv, glob, time, threading
 
 def crack():
     cap_file = "/mnt/data/wpa2_handshake/airodump-01.cap"
