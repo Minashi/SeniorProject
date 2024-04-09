@@ -155,10 +155,8 @@ def attacking_wpa2():
     submenu_options = [
         {"label": "Identify WPA2 Targets", "function": wpa2.identify_wpa2},
         {"label": "Set Target Access Point", "function": target_accesspoint},
-        {"label": "Identify Potential Clients", "function": wpa2.identify_clients},
         {"label": "Set Target Client", "function": target_client},
-        {"label": "Deauth Client", "function": wpa2.deauth},
-        {"label": "Crack WPA2 Handshake", "function": wpa2.crack_handshake},
+        {"label": "Crack WPA2 Handshake", "function": wpa2.main},
         {"label": "Return To Main Menu", "function": exit_menu},
     ]
 
