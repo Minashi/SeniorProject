@@ -1,8 +1,4 @@
-import subprocess
-import signal
-import sys
-import time
-import shutil
+import subprocess, signal, sys, time, shutil, csv
 
 deauth_process = None  # Global variable to keep track of the deauth subprocess
 
@@ -47,6 +43,28 @@ def move_cap_file():
         print(".cap file moved to /mnt/data/")
     except Exception as e:
         print("Failed to move .cap file:", e)
+
+def identify_wpa2():
+    file_path = "/mnt/data/access_points.txt"
+    try:
+        with open(file_path, mode='r') as file:
+            csv_reader = csv.reader(file)
+            vulnerable_aps = []
+            for row in csv_reader:
+                if "WPA2" in row[1]:  # Assuming the encryption standard is in the second column
+                    vulnerable_aps.append(row)
+            if vulnerable_aps:
+                print("Vulnerable Access Points Found:")
+                for ap in vulnerable_aps:
+                    print(f"SSID: {ap[2]}, BSSID: {ap[0]}, Encryption: {ap[1]}")
+                    print("Note: Uses WPA2 encryption. While more secure than WEP, it's still less secure compared to WPA3.")
+                    print("Remediation: Upgrade to WPA3 encryption for enhanced security.\n")
+            else:
+                print("No vulnerable access points found using WPA2 encryption.")
+    except FileNotFoundError:
+        print(f"The file {file_path} was not found.")
+    except Exception as e:
+        print(f"An error occurred while analyzing vulnerabilities: {e}")
 
 def main():
     ap_mac = "18:1B:EB:FC:B0:74"
