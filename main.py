@@ -4,6 +4,7 @@ from prettytable import PrettyTable
 from scripts import wep, wps, wpa2, evil_twin, ap_enum, pivot
 from scripts import activedirectory, checksum
 from scripts import host_discovery, network_scan, enumerate_lan
+from scripts.password_utilities import generate_password_interface, test_password_strength_interface
 
 host_mac = " "
 
@@ -70,6 +71,7 @@ def display_menu():
         {"label": "Pivot", "function": display_pivot},
         {"label": "Analyze Vulnerabilities", "function": wep.identify_wep},
         {"label": "Checksum Verification", "function": checksum.main},
+        {"label": "Password Utilities", "function": display_password_menu},
         {"label": "Exit", "function": exit_menu},
     ]
 
@@ -243,6 +245,26 @@ def enumerate_lan():
                 print("Invalid option, please try again.")
         except ValueError:
             print("Please enter a number.")
+
+def display_password_menu():
+    submenu_options = [
+        {"label": "Generate a Password", "function": generate_password_interface},
+        {"label": "Test Password Strength", "function": test_password_strength_interface},
+        {"label": "Return To Main Menu", "function": exit_menu},
+    ]
+    
+    while True:
+        print("\nPassword Utilities:")
+        for i, option in enumerate(submenu_options, start=1):
+            print(f"{i}. {option['label']}")
+
+        choice = int(input("Select an option: "))
+        if 1 <= choice <= len(submenu_options):
+            submenu_options[choice - 1]["function"]()
+            if submenu_options[choice - 1]["label"] == "Return To Main Menu":
+                break
+        else:
+            print("Invalid option, please try again.")
 
 # Check if the user is root before proceeding
 check_root_user()
