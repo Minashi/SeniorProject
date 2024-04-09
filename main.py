@@ -201,14 +201,15 @@ def attacking_wpa2():
         target_c = wpa2.target_c(ap_mac)
         print("\nNew Target Client: ", target_c)
 
-    def crack_wpa2():
+    def capture_wpa2():
         wpa2.main(target_ap, ap_mac, host_mac, target_c)
 
     submenu_options = [
         {"label": "Identify WPA2 Targets", "function": wpa2.identify_wpa2},
         {"label": "Set Target Access Point", "function": target_accesspoint},
         {"label": "Set Target Client", "function": target_client},
-        {"label": "Crack WPA2 Handshake", "function": crack_wpa2},
+        {"label": "Capture WPA2 Handshake", "function": capture_wpa2},
+        {"label": "Crack WPA2 Handshake", "function": wpa2.crack},
         {"label": "Return To Main Menu", "function": exit_menu},
     ]
 
