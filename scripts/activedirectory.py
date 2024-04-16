@@ -1,7 +1,91 @@
-import re, os, subprocess, netifaces, signal
+import re, os, subprocess, netifaces, signal, time
 
-def is_active_directory():
-    pass
+def list_interfaces():
+    """ List available network interfaces and return them. """
+    return netifaces.interfaces()
+
+def get_interface_ip(interface):
+    """ Retrieve the IP address of the specified network interface. """
+    try:
+        cmd_output = subprocess.check_output(f"ip addr show {interface}", shell=True).decode()
+        ip_address = re.search(r"inet (\d+\.\d+\.\d+)\.\d+", cmd_output)
+        return ip_address.group(1) if ip_address else None
+    except Exception as e:
+        print(f"Error retrieving IP for interface {interface}: {e}")
+        return None
+
+def run_nbtscan(ip_base):
+    """ Run nbtscan on the specified IP base and return the output. """
+    try:
+        print(f"Doing NBT name scan for addresses from {ip_base}.0/24/")
+        return subprocess.check_output(f"sudo nbtscan -r {ip_base}.0/24", shell=True).decode()
+    except subprocess.CalledProcessError as e:
+        return e.output.decode()
+
+def run_enum4linux(ip, username=None, password=None):
+    """ Run enum4linux on the specified IP address and handle output in real time. """
+    command = f"enum4linux {ip} -a"
+    if username and password:
+        command += f" -u {username} -p {password}"
+        
+    try:
+        print(f"Running enum4linux on {ip} with command: {command}")
+        time.sleep(2)
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        output = ""
+        while True:
+            line = process.stdout.readline()
+            if not line:
+                break
+            print(line, end='')  # Print in real time
+            output += line
+        process.stdout.close()
+        process.wait()
+        return output
+    except subprocess.CalledProcessError as e:
+        return e.output.decode()
+
+def basic_ad_enum():
+    interfaces = list_interfaces()
+    print("Available interfaces:")
+    for index, intf in enumerate(interfaces):
+        print(f"{index}: {intf}")
+    
+    index = int(input("Enter the index of the interface you want to use: "))
+    if index < 0 or index >= len(interfaces):
+        print("Invalid index. Exiting.")
+        return
+    
+    interface = interfaces[index]
+    ip_base = get_interface_ip(interface)
+    
+    if ip_base:
+        nbt_output = run_nbtscan(ip_base)
+        print(nbt_output)
+        
+        time.sleep(3)  # Pause for 3 seconds before continuing
+        
+        dc_ips = re.findall(r"(\d+\.\d+\.\d+\.\d+).*DC", nbt_output)
+        all_output = nbt_output + "\n"
+        
+        for ip in dc_ips:
+            auth = input("Do you have an authenticated account the next scan? (yes/no): ").lower()
+            username = None
+            password = None
+            if auth == "yes":
+                username = input("Enter username: ")
+                password = input("Enter password: ")
+            
+            enum_output = run_enum4linux(ip, username, password)
+            all_output += enum_output + "\n"
+        
+        try:
+            with open("/mnt/data/activedirectory_enum.txt", "w") as f:
+                f.write(all_output)
+        except IOError as e:
+            print(f"Error writing to file: {e}")
+    else:
+        print("Failed to get IP address for the interface.")
 
 def list_network_interfaces():
     """List all network interfaces."""
@@ -119,10 +203,6 @@ def crack_ntlmv2():
             print("Hashcat cracking was interrupted by user.")
     else:
         print("No valid hash was selected.")
-
-def basic_ad_enum():
-    # nbtscan, enum4linux
-    pass
 
 def list_hashes():
     hashes_file_path = '/mnt/data/ntlmv2-hashes.txt'
