@@ -9,8 +9,7 @@ def ensure_data_directory_exists():
 
 def is_monitor_mode_enabled(interface):
     try:
-        result = subprocess.run(['iwconfig', interface], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                text=True)
+        result = subprocess.run(['iwconfig', interface], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
         output = result.stdout
         return "Mode:Monitor" in output
     except Exception as e:
@@ -20,13 +19,20 @@ def is_monitor_mode_enabled(interface):
 def enable_monitor_mode(interface):
     try:
         print(f"Enabling monitoring mode on {interface}...")
-        result = subprocess.run(['airmon-ng', 'start', interface], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                text=True)
-        if is_monitor_mode_enabled(interface + 'mon'):
-            print(f"Monitoring mode enabled on {interface}mon\n")
-            return True
+        # Run airmon-ng to enable monitoring mode
+        result = subprocess.run(['airmon-ng', 'start', interface], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        # Check the output to determine the new monitoring interface name
+        new_interface = re.search(r"(mon\d+)", result.stdout)
+        if new_interface:
+            mon_interface = new_interface.group(1)
+            if is_monitor_mode_enabled(mon_interface):
+                print(f"Monitoring mode enabled on {mon_interface}\n")
+                return True
+            else:
+                print("Failed to enable monitoring mode.\n")
+                return False
         else:
-            print("Failed to enable monitoring mode.\n")
+            print("Monitoring mode could not be initialized.")
             return False
     except Exception as e:
         print(f"An error occurred while enabling monitoring mode: {e}")
