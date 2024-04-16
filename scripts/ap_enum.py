@@ -1,4 +1,4 @@
-import csv, subprocess, os, sys, signal
+import csv, subprocess, os, sys, signal, re
 from prettytable import PrettyTable
 
 def ensure_data_directory_exists():
