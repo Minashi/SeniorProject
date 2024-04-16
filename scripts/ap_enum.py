@@ -11,6 +11,7 @@ def is_monitor_mode_enabled(interface):
     try:
         result = subprocess.run(['iwconfig', interface], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
         output = result.stdout
+        # Check if 'Mode:Monitor' is present in the output
         return "Mode:Monitor" in output
     except Exception as e:
         print(f"An error occurred while checking monitoring mode: {e}")
@@ -21,18 +22,15 @@ def enable_monitor_mode(interface):
         print(f"Enabling monitoring mode on {interface}...")
         # Run airmon-ng to enable monitoring mode
         result = subprocess.run(['airmon-ng', 'start', interface], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        # Check the output to determine the new monitoring interface name
-        new_interface = re.search(r"(mon\d+)", result.stdout)
-        if new_interface:
-            mon_interface = new_interface.group(1)
-            if is_monitor_mode_enabled(mon_interface):
-                print(f"Monitoring mode enabled on {mon_interface}\n")
-                return True
-            else:
-                print("Failed to enable monitoring mode.\n")
-                return False
+        # Look for the creation of a monitoring interface in the output
+        # Assuming that the new interface is usually named as {interface}mon (as it's the most common pattern)
+        mon_interface = f"{interface}mon"
+        # Confirm if the new interface is correctly in monitoring mode
+        if is_monitor_mode_enabled(mon_interface):
+            print(f"Monitoring mode enabled on {mon_interface}\n")
+            return True
         else:
-            print("Monitoring mode could not be initialized.")
+            print(f"Failed to enable monitoring mode on {mon_interface}.\n")
             return False
     except Exception as e:
         print(f"An error occurred while enabling monitoring mode: {e}")
