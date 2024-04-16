@@ -93,7 +93,7 @@ def monitoring_mode():
         print(f"No network adapter is in monitoring mode.")
         user_input = input(f"Would you like to enable monitoring mode on {selected_interface}? (yes/no): ")
         if user_input.lower() == 'yes':
-            ap_enum.enable_monitor_mode(selected_interface)
+            selected_interface = ap_enum.enable_monitor_mode(selected_interface)
         else:
             print("Exiting without enabling monitoring mode or scanning.")
 
