@@ -59,6 +59,8 @@ def check_root_user():
         print("This script must be run as root. Exiting.")
         sys.exit(1)
 
+selected_interface = None
+
 def list_interfaces():
     # List available network interfaces using ip command
     output = subprocess.check_output(["ip", "link"]).decode("utf-8")
@@ -81,24 +83,29 @@ def list_interfaces():
             print("Please enter a number.")
 
 def monitoring_mode():
-    interface = list_interfaces()
+    global selected_interface
+    selected_interface = list_interfaces()
 
     # Check if the monitoring interface is already in monitoring mode
-    if ap_enum.is_monitor_mode_enabled(interface):
-        print(f"Monitoring mode is already enabled on: {interface}\n")
+    mon_interface = f'{selected_interface}mon'
+    if ap_enum.is_monitor_mode_enabled(mon_interface):
+        print(f"Monitoring mode is already enabled on: {mon_interface}\n")
     else:
         print(f"No network adapter is in monitoring mode.")
-        user_input = input(f"Would you like to enable monitoring mode on {interface}? (yes/no): ")
+        user_input = input(f"Would you like to enable monitoring mode on {selected_interface}? (yes/no): ")
         if user_input.lower() == 'yes':
-            ap_enum.enable_monitor_mode(interface)
+            ap_enum.enable_monitor_mode(selected_interface)
         else:
             print("Exiting without enabling monitoring mode or scanning.")
 
 def get_current_mac():
-    interface = list_interfaces()
-    mon_interface = f'{interface}mon'
+    global selected_interface, host_mac
+    if selected_interface is None:
+        print("No interface has been selected for monitoring. Please run monitoring_mode first.")
+        return None
+    
+    mon_interface = f'{selected_interface}mon'
     try:
-        global host_mac
         output = subprocess.check_output(["macchanger", "-s", mon_interface]).decode("utf-8")
         # Extract the current MAC address using regular expression
         host_mac = re.search(r"Current MAC:\s+([\w:]+)", output).group(1)
