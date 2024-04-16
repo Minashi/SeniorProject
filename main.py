@@ -102,10 +102,8 @@ def get_current_mac():
     if selected_interface is None:
         print("No interface has been selected for monitoring. Please run monitoring_mode first.")
         return None
-    
-    mon_interface = f'{selected_interface}mon'
     try:
-        output = subprocess.check_output(["macchanger", "-s", mon_interface]).decode("utf-8")
+        output = subprocess.check_output(["macchanger", "-s", selected_interface]).decode("utf-8")
         # Extract the current MAC address using regular expression
         host_mac = re.search(r"Current MAC:\s+([\w:]+)", output).group(1)
         return True
