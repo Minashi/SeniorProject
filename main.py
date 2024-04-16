@@ -87,9 +87,8 @@ def monitoring_mode():
     selected_interface = list_interfaces()
 
     # Check if the monitoring interface is already in monitoring mode
-    mon_interface = f'{selected_interface}mon'
-    if ap_enum.is_monitor_mode_enabled(mon_interface):
-        print(f"Monitoring mode is already enabled on: {mon_interface}\n")
+    if ap_enum.is_monitor_mode_enabled(selected_interface):
+        print(f"Monitoring mode is already enabled on: {selected_interface}\n")
     else:
         print(f"No network adapter is in monitoring mode.")
         user_input = input(f"Would you like to enable monitoring mode on {selected_interface}? (yes/no): ")
