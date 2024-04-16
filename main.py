@@ -257,6 +257,7 @@ def display_activedirectory():
         {"label": "Basic AD Enumeration", "function": activedirectory.basic_ad_enum},
         {"label": "LLMNR Poisoning: Capture Service Hashes", "function": activedirectory.llmnr_poisoning},
         {"label": "List Captured Hashes", "function": activedirectory.list_hashes},
+        {"label": "Crack Hash", "function": activedirectory.crack_ntlmv2},
         {"label": "Return to Pivot Menu", "function": exit_menu},
     ]
 
