@@ -1,7 +1,7 @@
 import subprocess, time, sys, csv, os, re, atexit
 from prettytable import PrettyTable
 
-from scripts import wep, wps, wpa2, evil_twin, ap_enum, pivot
+from scripts import wep, wps, wpa2, ap_enum, pivot
 from scripts import activedirectory, checksum
 from scripts import host_discovery, network_scan, enumerate_lan
 from scripts.password_utilities import generate_password_interface, test_password_strength_interface
