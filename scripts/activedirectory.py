@@ -83,6 +83,10 @@ def choose_hash():
         print("Invalid selection. Please enter a valid number.")
         return None
 
+def sigint_handler_crack(signal, frame):
+    """Handle SIGINT signal to allow cancellation of hash cracking."""
+    print("\nHashcat process interrupted by user. You may choose another action.")
+
 def crack_ntlmv2():
     chosen_hash = choose_hash()
     if chosen_hash:
@@ -90,10 +94,29 @@ def crack_ntlmv2():
             'hashcat', '-m', '5600', chosen_hash, '/usr/share/wordlists/rockyou.txt'
         ]
         try:
-            subprocess.run(hashcat_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Set up the SIGINT handler to allow interruption
+            signal.signal(signal.SIGINT, sigint_handler_crack)
+            
+            # Start hashcat with live output
+            process = subprocess.Popen(hashcat_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            
+            # Print output live
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    print(output.strip())
+            
+            # Reset the SIGINT handler to default
+            signal.signal(signal.SIGINT, signal.SIG_DFL)
+
             print("Hashcat process completed.")
         except subprocess.CalledProcessError as e:
             print(f"Failed to crack hash: {e}")
+        except KeyboardInterrupt:
+            # Handle the case where Ctrl+C is pressed while waiting for the command to complete
+            print("Hashcat cracking was interrupted by user.")
     else:
         print("No valid hash was selected.")
 
