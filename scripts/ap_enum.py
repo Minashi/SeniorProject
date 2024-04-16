@@ -28,7 +28,7 @@ def enable_monitor_mode(interface):
         # Confirm if the new interface is correctly in monitoring mode
         if is_monitor_mode_enabled(mon_interface):
             print(f"Monitoring mode enabled on {mon_interface}\n")
-            return True
+            return mon_interface
         else:
             print(f"Failed to enable monitoring mode on {mon_interface}.\n")
             return False
