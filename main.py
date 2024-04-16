@@ -59,31 +59,54 @@ def check_root_user():
         print("This script must be run as root. Exiting.")
         sys.exit(1)
 
-def monitoring_mode():
-    interface = 'wlan0'
-    mon_interface = 'wlan0mon'
+def list_interfaces():
+    # List available network interfaces using ip command
+    output = subprocess.check_output(["ip", "link"]).decode("utf-8")
+    interfaces = re.findall(r'\d+:\s([^:]+):', output)
+    
+    # Display interfaces for user to choose
+    print("Available interfaces:")
+    for idx, interface in enumerate(interfaces):
+        print(f"{idx + 1}. {interface}")
+    
+    # Get user choice
+    while True:
+        try:
+            choice = int(input("Choose the interface by number: "))
+            if 1 <= choice <= len(interfaces):
+                return interfaces[choice - 1]
+            else:
+                print("Invalid choice, try again.")
+        except ValueError:
+            print("Please enter a number.")
 
-    # Check if wlan0mon is already in monitoring mode
+def monitoring_mode():
+    interface = list_interfaces()
+    mon_interface = f'{interface}mon'
+
+    # Check if the monitoring interface is already in monitoring mode
     if ap_enum.is_monitor_mode_enabled(mon_interface):
         print(f"Monitoring mode is already enabled on: {mon_interface}\n")
     else:
-        print("No network adapter is in monitoring mode.")
-        user_input = input("Would you like to enable monitoring mode on wlan0? (yes/no): ")
+        print(f"No network adapter is in monitoring mode.")
+        user_input = input(f"Would you like to enable monitoring mode on {interface}? (yes/no): ")
         if user_input.lower() == 'yes':
             ap_enum.enable_monitor_mode(interface)
         else:
             print("Exiting without enabling monitoring mode or scanning.")
 
 def get_current_mac():
+    interface = list_interfaces()
+    mon_interface = f'{interface}mon'
     try:
         global host_mac
-        output = subprocess.check_output(["macchanger", "-s", "wlan0mon"]).decode("utf-8")
+        output = subprocess.check_output(["macchanger", "-s", mon_interface]).decode("utf-8")
         # Extract the current MAC address using regular expression
         host_mac = re.search(r"Current MAC:\s+([\w:]+)", output).group(1)
         return True
     except subprocess.CalledProcessError as e:
         print("Error:", e.output.decode("utf-8"))
-        return None   
+        return None
 
 def loading_prompt(message="", art=None):
     if art:
