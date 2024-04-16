@@ -253,7 +253,6 @@ def display_pivot():
 
 def display_activedirectory():
     submenu_options = [
-        {"label": "Validate Domain Existence", "function": activedirectory.is_active_directory},
         {"label": "Basic AD Enumeration", "function": activedirectory.basic_ad_enum},
         {"label": "LLMNR Poisoning: Capture Service Hashes", "function": activedirectory.llmnr_poisoning},
         {"label": "List Captured Hashes", "function": activedirectory.list_hashes},
