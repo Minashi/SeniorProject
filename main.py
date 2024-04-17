@@ -190,7 +190,6 @@ def attacking_wep():
     while True:
         print("\nAttacking WEP:")
         print("Target Access Point:", target_ap)
-        print("Target Client:", target_c, "\n")
         
         for i, option in enumerate(submenu_options, start=1):
             print(f"{i}. {option['label']}")
