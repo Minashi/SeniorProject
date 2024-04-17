@@ -2,21 +2,29 @@ import subprocess, time, csv, sys, shutil, os, re
 
 def identify_wep():
     file_path = "/mnt/data/access_points.txt"
+    output_file_path = "/mnt/data/vulnerabilities.txt"  # File to save the vulnerabilities
     try:
-        with open(file_path, mode='r') as file:
+        with open(file_path, mode='r') as file, open(output_file_path, 'a') as output_file:
             csv_reader = csv.reader(file)
             vulnerable_aps = []
             for row in csv_reader:
                 if "WEP" in row[1]:  # Assuming the encryption standard is in the second column
                     vulnerable_aps.append(row)
             if vulnerable_aps:
-                print("Vulnerable Access Points Found:")
+                message = "Vulnerable Access Points Found:\n"
+                output_file.write(message)
+                print(message)  # Output to the terminal
                 for ap in vulnerable_aps:
-                    print(f"SSID: {ap[2]}, BSSID: {ap[0]}, Encryption: {ap[1]}")
-                    print("Vulnerability: Uses WEP encryption, which is outdated and easily cracked.")
-                    print("Remediation: Upgrade to WPA3 or at least WPA2 encryption.\n")
+                    details = f"SSID: {ap[2]}, BSSID: {ap[0]}, Encryption: {ap[1]}\n"
+                    vulnerability_info = "Vulnerability: Uses WEP encryption, which is outdated and easily cracked.\n"
+                    remediation = "Remediation: Upgrade to WPA3 or at least WPA2 encryption.\n\n"
+                    output = details + vulnerability_info + remediation
+                    output_file.write(output)
+                    print(output)  # Output to the terminal
             else:
-                print("No vulnerable access points found using WEP encryption.")
+                message = "No vulnerable access points found using WEP encryption.\n"
+                output_file.write(message)
+                print(message)  # Output to the terminal
     except FileNotFoundError:
         print(f"The file {file_path} was not found.")
     except Exception as e:
