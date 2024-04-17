@@ -36,6 +36,8 @@ def target_ap():
 def main(ap_mac, interface):
     def sigint_handler(signum, frame):
         print("Ctrl+C was pressed, but the script continues...")
+        delete_file("/mnt/data/wpacracking/wpa.cap")
+        delete_file("/mnt/data/wpacracking/wep.cap")
 
     signal.signal(signal.SIGINT, sigint_handler)
 
