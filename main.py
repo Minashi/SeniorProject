@@ -5,6 +5,7 @@ from scripts import wep, wps, wpa2, ap_enum, pivot
 from scripts import activedirectory, checksum
 from scripts import host_discovery, network_scan, enumerate_lan
 from scripts.password_utilities import generate_password_interface, test_password_strength_interface
+from scripts.packetsniffer import packet_sniffer, capture_packets
 
 host_mac = " "
 
@@ -253,6 +254,7 @@ def display_pivot():
         {"label": "Pivot To Access Point", "function": pivot.submenu_option_2},
         {"label": "Enumerate LAN", "function": lan},
         {"label": "Active Directory", "function": display_activedirectory},
+        {"label": "Packet Sniffer", "function": packet_sniffer},
         {"label": "Exit Pivot Menu", "function": exit_menu},
     ]
 
