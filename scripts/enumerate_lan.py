@@ -31,7 +31,11 @@ def basic_lan_scan():
         return
     try:
         print(f"Scanning {target} on interface {interface}...")
-        subprocess.run(['nmap', '-v', '-e', interface, target], check=True)
+        result = subprocess.run(['nmap', '-v', '-e', interface, target], capture_output=True, text=True, check=True)
+        print(result.stdout)
+        # Append the output to the vulnerabilities file
+        with open('/mnt/data/vulnerabilities.txt', 'a') as file:
+            file.write(result.stdout)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the scan: {e}")
     except KeyboardInterrupt:
@@ -43,7 +47,11 @@ def scan_for_vulnerabilities():
         return
     print(f"Scanning {target} on interface {interface} for common vulnerabilities...")
     try:
-        subprocess.run(['nmap', '-e', interface, '-sV', '-v', '--script=vuln', target], check=True)
+        result = subprocess.run(['nmap', '-e', interface, '-sV', '-v', '--script=vuln', target], capture_output=True, text=True, check=True)
+        print(result.stdout)
+        # Append the output to the vulnerabilities file
+        with open('/mnt/data/vulnerabilities.txt', 'a') as file:
+            file.write(result.stdout)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the vulnerability scan: {e}")
     except KeyboardInterrupt:
