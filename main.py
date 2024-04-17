@@ -139,7 +139,7 @@ def display_menu():
         {"label": "List Discovered Access Points", "function": ap_enum.discovered_ap},
         {"label": "Clear Discovered Access Points", "function": ap_enum.delete_accesspoints},
         {"label": "Attacking WEP", "function": attacking_wep},
-        {"label": "Attacking WPA/2", "function": attacking_wpa2},
+        {"label": "Attacking WPA", "function": attacking_wpa},
         {"label": "Pivot", "function": display_pivot},
         {"label": "Analyze Vulnerabilities", "function": wep.identify_wep},
         {"label": "Checksum Verification", "function": checksum.main},
@@ -202,7 +202,7 @@ def attacking_wep():
         else:
             print("Invalid option, please try again.")
 
-def attacking_wpa2():
+def attacking_wpa():
     target_ap = "Not Set"
     target_c = "Not Set"
     ap_mac = " "
@@ -213,28 +213,20 @@ def attacking_wpa2():
         target_ap, ap_mac = wpa2.target_ap()
         print("\nNew Target Access Point: ", target_ap)
 
-    def target_client():
-        nonlocal target_c
-        print("Verify there is a client connected! Before attempting!\n")
-        target_c = wpa2.target_c(ap_mac)
-        print("\nNew Target Client: ", target_c)
-
     def capture_wpa2():
         wpa2.main(target_ap, ap_mac, target_c)
 
     submenu_options = [
-        {"label": "Identify WPA2 Targets", "function": wpa2.identify_wpa2},
+        {"label": "Identify WPA Targets", "function": wpa2.identify_wpa2},
         {"label": "Set Target Access Point", "function": target_accesspoint},
-        {"label": "Set Target Client", "function": target_client},
-        {"label": "Capture WPA2 Handshake", "function": capture_wpa2},
-        {"label": "Crack WPA2 Handshake", "function": wpa2.crack},
+        {"label": "Capture WPA Handshake", "function": capture_wpa2},
+        {"label": "Crack WPA Handshake", "function": wpa2.crack},
         {"label": "Return To Main Menu", "function": exit_menu},
     ]
 
     while True:
         print("\nAttacking WPA2:")
         print("Target Access Point:", target_ap)
-        print("Target Client:", target_c, "\n")
 
         for i, option in enumerate(submenu_options, start=1):
             print(f"{i}. {option['label']}")
