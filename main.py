@@ -48,6 +48,12 @@ def cleanup():
 
 # Set up the dual logging system
 log_path = "/mnt/data/log.txt"
+
+directory = os.path.dirname(log_path)
+if not os.path.exists(directory):
+    os.makedirs(directory)
+    print(f"Created directory {directory}")
+
 sys.stdout = DualLogger(log_path, sys.stdout)
 sys.stderr = DualLogger(log_path, sys.stderr)
 
