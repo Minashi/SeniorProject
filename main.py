@@ -216,10 +216,13 @@ def attacking_wpa():
     def capture_wpa2():
         wpa2.main(ap_mac, selected_interface)
 
+    def crackit():
+        wpa2.crack(target_ap)
+    
     submenu_options = [
         {"label": "Set Target Access Point", "function": target_accesspoint},
         {"label": "Capture WPA Handshake", "function": capture_wpa2},
-        {"label": "Crack WPA Handshake", "function": wpa2.crack},
+        {"label": "Crack WPA Handshake", "function": crackit},
         {"label": "Return To Main Menu", "function": exit_menu},
     ]
 
