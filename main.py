@@ -177,19 +177,12 @@ def attacking_wep():
         target_ap, ap_mac = wep.target_ap()
         print("\nNew Target Access Point: ", target_ap)
 
-    def target_client():
-        nonlocal target_c
-        print("Verify there is a client connected! Before attempting!\n")
-        target_c = wep.target_c(ap_mac)
-        print("\nNew Target Client: ", target_c)
-
     def crack_wep():
-        wep.main(target_ap, ap_mac, host_mac, target_c)
+        wep.main(ap_mac, selected_interface)
     
     submenu_options = [
         {"label": "Identify WEP Targets", "function": wep.identify_wep},
         {"label": "Set Target Access Point", "function": target_accesspoint},
-        {"label": "Set Target Client", "function": target_client},
         {"label": "Crack WEP Key", "function": crack_wep},
         {"label": "Return To Main Menu", "function": exit_menu},
     ]
