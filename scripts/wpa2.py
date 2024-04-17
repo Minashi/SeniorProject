@@ -1,52 +1,29 @@
 import subprocess, signal, sys, time, os, shutil, csv, glob, time, threading
 
-def identify_wpa2():
-    file_path = "/mnt/data/access_points.txt"
-    try:
-        with open(file_path, mode='r') as file:
-            csv_reader = csv.reader(file)
-            vulnerable_aps = []
-            for row in csv_reader:
-                if "WPA2" in row[1]:
-                    vulnerable_aps.append(row)
-            if vulnerable_aps:
-                print("Vulnerable Access Points Found:")
-                for ap in vulnerable_aps:
-                    print(f"SSID: {ap[2]}, BSSID: {ap[0]}, Encryption: {ap[1]}")
-                    print(
-                        "Note: Uses WPA2 encryption. While more secure than WEP, it's still less secure compared to WPA3.")
-                    print("Remediation: Upgrade to WPA3 encryption for enhanced security.\n")
-            else:
-                print("No vulnerable access points found using WPA2 encryption.")
-    except FileNotFoundError:
-        print(f"The file {file_path} was not found.")
-    except Exception as e:
-        print(f"An error occurred while analyzing vulnerabilities: {e}")
-
 def target_ap():
     file_path = "/mnt/data/access_points.txt"
     try:
         with open(file_path, mode='r') as file:
             csv_reader = csv.reader(file)
-            wpa2_aps = []
+            all_aps = []
             for row in csv_reader:
-                if "WPA2" in row[1]:
-                    wpa2_aps.append(row)
+                # Add every access point to the list, not just those with WPA2 encryption
+                all_aps.append(row)
 
-            if wpa2_aps:
-                print("Select a Vulnerable Access Point by its index number:")
-                for index, ap in enumerate(wpa2_aps):
+            if all_aps:
+                print("Select an Access Point by its index number:")
+                for index, ap in enumerate(all_aps):
                     print(f"{index}: SSID: {ap[2]}, BSSID: {ap[0]}, Encryption: {ap[1]}")
 
                 selected_index = int(input("Enter the index number of the target AP: "))
-                if 0 <= selected_index < len(wpa2_aps):
-                    selected_ap = wpa2_aps[selected_index]
+                if 0 <= selected_index < len(all_aps):
+                    selected_ap = all_aps[selected_index]
                     return selected_ap[2], selected_ap[0]  # Returning SSID and BSSID
                 else:
                     print("Invalid index selected.")
                     return None, None
             else:
-                print("No vulnerable access points found using WPA2 encryption.")
+                print("No access points found.")
                 return None, None
 
     except FileNotFoundError:
@@ -98,9 +75,8 @@ def move_files():
 def delete_file(filepath):
     if os.path.exists(filepath):
         os.remove(filepath)
-        print(f"Deleted {filepath}")
     else:
-        print(f"{filepath} not found.")
+        print(f"{filepath} not found. Unable to delete.")
 
 def crack():
     cap_file_path = "/mnt/data/wpacracking/wpa.cap"
