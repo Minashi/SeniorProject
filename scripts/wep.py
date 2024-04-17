@@ -1,4 +1,4 @@
-import subprocess, time, csv, sys, shutil, os
+import subprocess, time, csv, sys, shutil, os, re
 
 def identify_wep():
     file_path = "/mnt/data/access_points.txt"
