@@ -251,7 +251,7 @@ def display_pivot():
     submenu_options = [
         {"label": "List Cracked Passwords", "function": pivot.submenu_option_1},
         {"label": "Pivot To Access Point", "function": pivot.submenu_option_2},
-        {"label": "Enumerate LAN", "function": enumerate_lan},
+        {"label": "Enumerate LAN", "function": lan},
         {"label": "Active Directory", "function": display_activedirectory},
         {"label": "Exit Pivot Menu", "function": exit_menu},
     ]
@@ -291,7 +291,7 @@ def display_activedirectory():
         else:
             print("Invalid option, please try again.")
 
-def enumerate_lan():
+def lan():
     print("LAN Enumeration Options:")
     lan_options = [
         {"label": "Basic LAN Scan", "function": enumerate_lan.basic_lan_scan},
