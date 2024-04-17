@@ -41,7 +41,7 @@ def test_password_strength(password):
             return 'normal'
         else:
             return 'weak'
-    elif length < 15:
+    elif length < 16:
         if has_lowercase and has_uppercase and has_digit and has_special:
             return 'strong'
         elif (has_lowercase or has_uppercase) and (has_digit or has_special):
