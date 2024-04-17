@@ -34,25 +34,27 @@ def target_ap():
         return None, None
 
 def main(ap_mac, interface):
-    def sigint_handler(signum, frame):
-        print("Ctrl+C was pressed, but the script continues...")
-        delete_file("/mnt/data/wpacracking/wpa.cap")
-        delete_file("/mnt/data/wpacracking/wep.cap")
-
-    signal.signal(signal.SIGINT, sigint_handler)
-
-    # Run besside-ng and handle files
     besside_ng(ap_mac, interface)
 
 def besside_ng(ap_mac, interface):
-    cmd = ["sudo", "besside-ng", "-b", ap_mac, interface]
+    def sigint_handler(signum, frame):
+        print("Ctrl+C was pressed during besside-ng execution. Cleaning up and exiting...")
+        delete_file("/mnt/data/wpacracking/wpa.cap")
+        delete_file("/mnt/data/wpacracking/wep.cap")
+
+    # Set the signal handler only during the execution of this function
+    original_handler = signal.getsignal(signal.SIGINT)
+    signal.signal(signal.SIGINT, sigint_handler)
 
     try:
         print("Running besside-ng, please wait...")
+        cmd = ["sudo", "besside-ng", "-b", ap_mac, interface]
         subprocess.run(cmd)
     except Exception as e:
         print(f"An error occurred during besside-ng execution: {e}")
     finally:
+        # Reset the signal handler to the original one after finishing
+        signal.signal(signal.SIGINT, original_handler)
         cleanup()
 
 def cleanup():
