@@ -75,16 +75,21 @@ def main(ap_mac, interface):
     
     # Execute the command and write the output to both the terminal and the log file
     with open(log_file_path, 'a') as log_file:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                print(output.strip())
-                log_file.write(output)
-    
+        try:
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    print(output.strip())
+                    log_file.write(output)
+        except KeyboardInterrupt:
+            # Handle user interrupt, terminate subprocess and continue
+            process.terminate()
+            print("Command interrupted by user. Continuing with the script...")
+
     # Parse the log file to extract the SSID and key
     parse_and_save_key(log_file_path)
 
