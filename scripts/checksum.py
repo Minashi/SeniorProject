@@ -49,11 +49,25 @@ def check_file_integrity(file_path):
         return False
 
 def main():
-    # User input for the file path
-    file_path = input("Enter the file path to check: ")
-    
-    # Check if the file has changed since the last checksum calculation
-    if check_file_integrity(file_path):
-        print("File integrity preserved.")
-    else:
-        print("File has changed!")
+    while True:
+        try:
+            # User input for the file path
+            file_path = input("Enter the file path to check: ")
+            # Check if the file exists
+            with open(file_path, 'r'):
+                pass
+        #If an invalid file path is entered, prompt for a different path
+        except FileNotFoundError: 
+            print("File path invalid. Please enter a valid file path.")
+            continue
+        
+        # Check if the file has changed since the last checksum calculation
+        if check_file_integrity(file_path):
+            print("File integrity preserved.")
+        else:
+            print("File has changed!")
+
+        # Ask if the user wants to check another file
+        choice = input("Would you like to check another file? (y/n): ")
+        if choice.lower() != 'y':
+            break
