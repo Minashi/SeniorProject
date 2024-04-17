@@ -105,6 +105,8 @@ def parse_and_save_key(log_file_path):
                 match = re.search(r"Got key for (\S+) \[(\S+)\]", line)
                 if match:
                     ssid, key = match.groups()
+                    # Remove colons from the key
+                    key = key.replace(':', '')
                     break
     
     # Save the SSID and key to the passwords file
@@ -114,3 +116,4 @@ def parse_and_save_key(log_file_path):
                 file.write(f"{ssid},{key}\n")
         except IOError as e:
             print(f"Failed to save the password: {e}")
+
