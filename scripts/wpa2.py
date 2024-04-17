@@ -72,7 +72,6 @@ def move_files():
         dest = os.path.join(dest_dir, os.path.basename(cap_file))
         if os.path.exists(src):
             os.rename(src, dest)
-            print(f"Moved {cap_file} to {dest_dir}")
         else:
             print(f"{cap_file} not found.")
 
