@@ -26,23 +26,26 @@ def read_stored_checksum(file_path):
         return None
 
 def check_file_integrity(file_path):
-    #determine if the file has been altered
     stored_checksum = read_stored_checksum(file_path)
     if stored_checksum is None:
         print("No stored checksum found. Calculating and storing checksum...")
         current_checksum = calculate_md5_checksum(file_path)
         store_checksum(file_path, current_checksum)
+        print("Checksum:", current_checksum)  # Print the checksum
         return True
     
     current_checksum = calculate_md5_checksum(file_path)
     if current_checksum == stored_checksum:
+        print("Checksum:", current_checksum)  # Print the checksum
         return True
     else:
+        print("Checksum:", current_checksum)  # Print the checksum
         print("File has changed.")
         choice = input("Would you like to calculate and update the checksum? (y/n): ")
         if choice.lower() == 'y':
             print("Updating checksum...")
             store_checksum(file_path, current_checksum)
+            print("Checksum:", current_checksum)  # Print the checksum
         return False
 
 def main():
