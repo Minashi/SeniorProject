@@ -1,20 +1,53 @@
-import subprocess
+import subprocess, netifaces
+
+def get_network_interfaces():
+    """ Retrieve available network interfaces and their associated IP addresses. """
+    interfaces = netifaces.interfaces()
+    addresses = {}
+    for interface in interfaces:
+        addrs = netifaces.ifaddresses(interface)
+        ipv4 = addrs.get(netifaces.AF_INET)
+        if ipv4:
+            addresses[interface] = ipv4[0]['addr']
+    return addresses
+
+def select_network_interface():
+    """ Display a list of network interfaces for the user to select from. """
+    addresses = get_network_interfaces()
+    if not addresses:
+        print("No network interfaces with IPv4 found.")
+        return None, None
+    print("Available network interfaces:")
+    for idx, (interface, ip) in enumerate(addresses.items(), start=1):
+        print(f"{idx}: {interface} ({ip})")
+    selection = int(input("Select an interface to scan: "))
+    interface = list(addresses.keys())[selection - 1]
+    ip_base = addresses[interface].rsplit('.', 1)[0] + '.0/24'
+    return interface, ip_base
 
 def basic_lan_scan():
-    target = input("Enter target IP or range (e.g., 192.168.1.1/24): ")
-    print(f"Scanning {target}...")
+    interface, target = select_network_interface()
+    if not interface:
+        return
     try:
-        subprocess.run(['nmap', target], check=True)
+        print(f"Scanning {target} on interface {interface}...")
+        subprocess.run(['nmap', '-v', '-e', interface, target], check=True)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the scan: {e}")
+    except KeyboardInterrupt:
+        print("Scan canceled by user. Returning to main application.")
 
 def scan_for_vulnerabilities():
-    target = input("Enter target IP or range for vulnerability scan: ")
-    print(f"Scanning {target} for common vulnerabilities...")
+    interface, target = select_network_interface()
+    if not interface:
+        return
+    print(f"Scanning {target} on interface {interface} for common vulnerabilities...")
     try:
-        subprocess.run(['nmap', '-sV', '--script=vuln', target], check=True)
+        subprocess.run(['nmap', '-e', interface, '-sV', '-v', '--script=vuln', target], check=True)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the vulnerability scan: {e}")
+    except KeyboardInterrupt:
+        print("Vulnerability scan canceled by user. Returning to main application.")
 
 def list_nmap_script_options():
     # List of commonly used Nmap scripts and their descriptions
@@ -71,13 +104,19 @@ def custom_nmap_script_scan():
         print("Scan cancelled.")
         return
 
-    target = input("Enter target IP or range for custom Nmap script scan: ")
+    interface, target = select_network_interface()
+    if not interface:
+        return
     print(f"\nRunning Nmap script ({script}) on {target}...")
     try:
-        result = subprocess.run(['nmap', '--script', script, target], capture_output=True, text=True, check=True)
+        result = subprocess.run(['nmap', '-v', '-e', interface, '--script', script, target], 
+                                capture_output=True, text=True, check=True)
         print("Scan complete.")
+        print(result.stdout)
     except subprocess.CalledProcessError as e:
         print(f"An error occurred during the custom script scan: {e}")
+    except KeyboardInterrupt:
+        print("Custom script scan canceled by user. Exiting gracefully.")
 
 vulnerabilities_info = {
     "smb-vuln-ms17-010": {
