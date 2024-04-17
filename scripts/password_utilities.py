@@ -36,25 +36,29 @@ def test_password_strength(password):
         return 'very weak'
     elif length < 8:
         return 'weak'
-    elif length < 10:
-        if has_lowercase and has_uppercase and (has_digit or has_special):
+    elif length < 12:
+        if has_lowercase and has_uppercase and has_digit or has_special: 
             return 'normal'
         else:
             return 'weak'
-    elif length < 12:
-        if (has_lowercase and has_uppercase) or (has_digit and has_special):
+    elif length < 15:
+        if has_lowercase and has_uppercase and has_digit and has_special:
             return 'strong'
-        else:
+        elif (has_lowercase or has_uppercase) and (has_digit or has_special):
             return 'normal'
-    elif length >= 18:
+        else:
+            return 'weak'
+    elif length >= 16:
         if has_lowercase and has_uppercase and has_digit and has_special:
             return 'very strong'
-        elif (has_lowercase and has_uppercase) or (has_digit and has_special):
+        elif (has_lowercase and has_uppercase) and (has_digit or has_special):
             return 'strong'
-        else:
+        elif (has_lowercase or has_uppercase) and (has_digit or has_special):
             return 'normal'
+        else:
+            return 'weak'
     else:
-        return 'strong'
+        return 'weak'
 
 def generate_password_interface():
     print("\nPassword Generator")
