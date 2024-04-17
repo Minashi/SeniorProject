@@ -62,7 +62,6 @@ def run_airodump(interface):
 
     finally:
         print("Cleaning up...")
-        # Your cleanup code here (if any), e.g., closing files, removing temporary files
 
     print("Airodump-ng has finished scanning.")
     
@@ -87,9 +86,9 @@ def run_airodump(interface):
             for row in csv_reader:
                 if len(row) >= 14:  # Ensure the row has the expected number of elements
                     bssid = row[0].strip()
-                    enc = row[5].strip()
+                    enc = row[5].strip()  # No need to check if empty
                     ssid = row[13].strip()
-                    if bssid and enc and ssid:  # Check for non-empty values
+                    if bssid and ssid:  # Check for non-empty values of BSSID and SSID
                         aps_file.write(f"{bssid}, {enc}, {ssid}\n")
     print(f"Extraction complete. All access points have been saved to {all_aps_filename}")
 
