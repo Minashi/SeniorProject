@@ -67,7 +67,7 @@ def target_ap():
 
 def main(ap_mac, interface):
     # Hard coded channel for the project; don't have time to set dynamically
-    channel = "6"
+    channel = "1"
     log_file_path = "/mnt/data/wepcrack.log"
     
     # Prepare the command to run besside-ng and capture its output
